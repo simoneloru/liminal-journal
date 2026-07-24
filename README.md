@@ -276,6 +276,18 @@ python3 -m http.server 8080
 
 ---
 
+## Inspiration & method
+
+Liminal Journal is a small tool for **interstitial journaling**: *logging between activities* (what you are doing now and the next tiny step), not advance planning. The ADHD-friendly idea is to **lower start friction** and keep steps too small to trigger paralysis.
+
+**Video that inspired this project:**
+
+- [The BEST Productivity Method Ever for ADHD | Interstitial Journaling](https://www.youtube.com/watch?v=UFidZJhxz84) — [Novie by the Sea](https://www.youtube.com/@novie-bythesea)
+
+This app is an independent implementation of the practice and is **not affiliated with** the video creator. The same credit appears in the app menu (⋯).
+
+---
+
 ## Privacy
 
 - No app server in MVP: data stays in **your browser**.

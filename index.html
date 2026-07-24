@@ -352,6 +352,19 @@
       justify-content: flex-start;
     }
 
+    .menu-credit {
+      margin: 0.85rem 0 0;
+      font-size: 0.8rem;
+      color: var(--fg-muted);
+      line-height: 1.4;
+    }
+
+    .menu-credit a {
+      color: var(--accent);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
     .sr-only {
       position: absolute;
       width: 1px;
@@ -436,6 +449,10 @@
         <button type="button" id="btn-restore"></button>
         <button type="button" id="btn-share-day"></button>
       </div>
+      <p class="menu-credit" id="menu-credit"></p>
+      <p class="menu-credit">
+        <a id="link-inspiration" href="https://www.youtube.com/watch?v=UFidZJhxz84" target="_blank" rel="noopener noreferrer"></a>
+      </p>
     </div>
     <div class="dialog-actions">
       <button type="button" class="ghost" id="btn-menu-close"></button>
@@ -514,6 +531,8 @@
       shortcut: "⌘/Ctrl+Enter to save",
       replaceConfirmTitle: "Replace everything?",
       replaceConfirmMsg: "Your current journal will be replaced by this backup.",
+      inspiredBy: "Inspired by interstitial journaling for ADHD.",
+      inspirationLink: "Watch: Novie by the Sea (YouTube)",
     },
     it: {
       title: "Liminal Journal",
@@ -553,6 +572,8 @@
       shortcut: "⌘/Ctrl+Invio per salvare",
       replaceConfirmTitle: "Sostituire tutto?",
       replaceConfirmMsg: "Il diario attuale verrà sostituito da questo backup.",
+      inspiredBy: "Ispirato all’interstitial journaling per l’ADHD.",
+      inspirationLink: "Guarda: Novie by the Sea (YouTube)",
     },
   };
 
@@ -585,6 +606,8 @@
     btnRestore: document.getElementById("btn-restore"),
     btnShareDay: document.getElementById("btn-share-day"),
     btnMenuClose: document.getElementById("btn-menu-close"),
+    menuCredit: document.getElementById("menu-credit"),
+    linkInspiration: document.getElementById("link-inspiration"),
     restoreDialog: document.getElementById("restore-dialog"),
     restoreTitle: document.getElementById("restore-title"),
     restoreSummary: document.getElementById("restore-summary"),
@@ -692,6 +715,8 @@
     el.btnRestore.textContent = t("restore");
     el.btnShareDay.textContent = t("shareDay");
     el.btnMenuClose.textContent = t("close");
+    el.menuCredit.textContent = t("inspiredBy");
+    el.linkInspiration.textContent = t("inspirationLink");
     el.restoreTitle.textContent = t("restoreTitle");
     el.btnRestoreCancel.textContent = t("cancel");
     el.btnRestoreMerge.textContent = t("merge");
