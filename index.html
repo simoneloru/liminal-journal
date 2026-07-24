@@ -285,17 +285,6 @@
       line-height: 1.15;
     }
 
-    .brand p {
-      margin: 0.15rem 0 0;
-      font-size: 0.78rem;
-      line-height: 1.3;
-      color: var(--fg-muted);
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-    }
-
     #btn-menu {
       border-radius: 12px;
       border: 1px solid var(--border);
@@ -1119,10 +1108,6 @@
     }
 
     @media (min-width: 640px) {
-      .brand p {
-        font-size: 0.82rem;
-        -webkit-line-clamp: 1;
-      }
       .composer-actions .primary {
         min-width: 5.5rem;
       }
@@ -1207,7 +1192,6 @@
           </div>
           <div class="brand-text">
             <h1 id="app-title">Liminal Journal</h1>
-            <p id="app-subtitle"></p>
           </div>
         </div>
         <button type="button" class="icon" id="btn-menu" aria-label="Menu" aria-haspopup="dialog" title="Menu">
@@ -1561,7 +1545,6 @@
 
   const el = {
     title: document.getElementById("app-title"),
-    subtitle: document.getElementById("app-subtitle"),
     storageWarning: document.getElementById("storage-warning"),
     backupReminder: document.getElementById("backup-reminder"),
     backupReminderText: document.getElementById("backup-reminder-text"),
@@ -1759,7 +1742,6 @@
   function applyI18n() {
     document.documentElement.lang = state.settings.lang === "it" ? "it" : "en";
     el.title.textContent = t("title");
-    el.subtitle.textContent = t("subtitle");
     el.composer.placeholder = t("placeholder");
     el.btnSave.textContent = t("save");
     el.composerExpandTitle.textContent = t("expandTitle");
