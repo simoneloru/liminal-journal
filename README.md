@@ -110,10 +110,18 @@ MVP remains useful offline and private; cloud is a product expansion, not a half
 - Versioned key, e.g. `liminal-journal:v1`.
 
 ### Backup, restore, share (user-friendly)
-- **Download backup** — saves a file (JSON under the hood; filename like `liminal-journal-backup-YYYY-MM-DD.json`). UI copy avoids “JSON” unless the user opens advanced details.
-- **Restore backup** — file picker → preview summary (counts / date range) → **Merge** (default, by `id`) or **Replace all** (confirm).
-- **Share this day** — plain text via Web Share API when available; fallback to copy/download `.txt` for that day.
-- Soft **storage warning** banner when size/count is high; saving still works.
+- **Save a safety copy** — prefers **Web Share** of a file (on iPhone: Save to Files / iCloud / Drive); falls back to download. Records `lastBackupAt`.
+- **Restore from a copy** — file picker → summary → **Add to what I have** (merge by `id`, **never duplicates**) or **Replace everything** (double-checked).
+- **Share this day** — plain text via Web Share API when available.
+- Soft **backup reminder** after enough notes and no recent safety copy (dismissible for the session).
+- Soft **storage warning** when size/count is high; writing still works.
+- **Delete entire notebook** in the menu — **two** confirmations; settings kept.
+
+### Tests
+```bash
+npm test
+```
+Pure import/export/merge logic lives in `journal-core.js` (unit-tested, including double-import and full-journal merge).
 
 ### Theme & language
 - Calm light / dark (`prefers-color-scheme` + toggle, persisted).
@@ -270,8 +278,8 @@ python3 -m http.server 8080
 | Phase | Scope |
 |-------|--------|
 | **MVP** | Composer, day picker, edit/delete, localStorage, friendly backup/restore/share, EN/IT, theme, Pages |
-| **v1.1** | Polish calendar UX if needed, search within day, undo snackbar |
-| **v1.2** | Optional transparent-ish sync (product decision: account vs linked file provider) |
+| **v1.1** | Safety copy (share-first), restore merge-by-id, backup reminder, wipe notebook (double confirm) |
+| **v1.2** | Undo snackbar, search; *no* hosted user accounts (by choice — free, no GDPR journal hosting) |
 | **Never (unless we reverse)** | Gamification, social feed, AI coach |
 
 ---

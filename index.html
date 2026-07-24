@@ -304,7 +304,8 @@
       box-shadow: var(--shadow-sm);
     }
 
-    #storage-warning {
+    #storage-warning,
+    #backup-reminder {
       display: none;
       margin: 0.7rem auto 0;
       padding: 0.7rem 0.9rem;
@@ -313,9 +314,57 @@
       color: var(--warn-fg);
       border: 1px solid color-mix(in srgb, var(--warn-fg) 18%, transparent);
       font-size: 0.86rem;
+      line-height: 1.4;
     }
 
-    #storage-warning.visible { display: block; }
+    #storage-warning.visible,
+    #backup-reminder.visible { display: block; }
+
+    #backup-reminder {
+      display: none;
+      background: var(--accent-soft);
+      color: var(--fg);
+      border-color: color-mix(in srgb, var(--accent) 25%, var(--border));
+    }
+
+    #backup-reminder.visible {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.5rem 0.75rem;
+      justify-content: space-between;
+    }
+
+    #backup-reminder p {
+      margin: 0;
+      flex: 1 1 12rem;
+      font-size: 0.86rem;
+      color: var(--fg-muted);
+    }
+
+    #backup-reminder .banner-actions {
+      display: flex;
+      gap: 0.35rem;
+      flex: 0 0 auto;
+    }
+
+    #backup-reminder button {
+      min-height: 2.25rem;
+      padding: 0.35rem 0.7rem;
+      font-size: 0.82rem;
+    }
+
+    .menu-meta {
+      margin: 0.35rem 0.15rem 0;
+      font-size: 0.78rem;
+      color: var(--fg-faint);
+    }
+
+    .menu-list button.danger-row {
+      color: var(--danger);
+      border-color: color-mix(in srgb, var(--danger) 22%, var(--border));
+      background: var(--danger-soft);
+    }
 
     /* Day bar: prev | open month calendar | next */
     .day-bar {
@@ -1128,6 +1177,13 @@
         </button>
       </div>
       <div class="wrap" id="storage-warning" role="status"></div>
+      <div class="wrap" id="backup-reminder" role="status">
+        <p id="backup-reminder-text"></p>
+        <div class="banner-actions">
+          <button type="button" class="ghost" id="btn-reminder-dismiss"></button>
+          <button type="button" class="primary" id="btn-reminder-backup"></button>
+        </div>
+      </div>
     </header>
 
     <div class="wrap day-bar" role="navigation" aria-label="Day">
@@ -1206,6 +1262,10 @@
         <button type="button" class="secondary" id="btn-download"></button>
         <button type="button" class="secondary" id="btn-restore"></button>
         <button type="button" class="secondary" id="btn-share-day"></button>
+        <p class="menu-meta" id="last-backup-meta"></p>
+        <p class="menu-meta" id="data-privacy-note"></p>
+        <div class="menu-sep" role="separator"></div>
+        <button type="button" class="danger-row" id="btn-wipe-all"></button>
       </div>
       <p class="menu-credit" id="menu-credit"></p>
       <p class="menu-credit">
@@ -1262,13 +1322,25 @@
 
   <input type="file" id="file-input" accept="application/json,.json" hidden />
 
-  <script>
-(function () {
-  "use strict";
+  <script type="module">
+  import {
+    STORAGE_KEY,
+    isValidEntry,
+    parseBackup,
+    buildBackup,
+    serializeBackup,
+    mergeEntries,
+    replaceEntries,
+    clearAllEntries,
+    shouldShowBackupReminder,
+    markBackupDone,
+    backupFilename,
+    summarizeEntryRange,
+  } from "./journal-core.js";
 
-  const STORAGE_KEY = "liminal-journal:v1";
   const SOFT_BYTES = 1.5 * 1024 * 1024;
   const SOFT_COUNT = 1500;
+  const REMINDER_DISMISS_KEY = "liminal-journal:reminder-dismissed";
 
   const I18N = {
     en: {
@@ -1277,12 +1349,28 @@
       placeholder: "e.g. Opened the project folder",
       save: "Save",
       empty: "This corner is quiet. The writing space below is ready — a micro-step is enough.",
-      download: "Download backup",
-      restore: "Restore backup",
+      download: "Save a safety copy",
+      restore: "Restore from a copy",
       shareDay: "Share this day",
-      merge: "Merge with existing",
+      merge: "Add to what I have",
       replace: "Replace everything",
-      storageWarn: "Backup recommended — storage is getting full. Saving still works.",
+      storageWarn: "Storage is getting full — save a safety copy when you can. Writing still works.",
+      lastBackupNever: "No safety copy yet — data stays only on this phone/browser.",
+      lastBackupAt: "Last safety copy: {date}",
+      backupReminder: "Save a safety copy? It protects your notes if this browser is cleared.",
+      backupReminderAction: "Save copy",
+      backupReminderDismiss: "Later",
+      copySaved: "Safety copy ready",
+      copyShared: "Safety copy shared",
+      copyCancelled: "Share cancelled",
+      wipeAll: "Delete entire notebook…",
+      wipeTitle1: "Delete all notes?",
+      wipeMsg1: "This removes every entry on this device. Theme and language stay.",
+      wipeTitle2: "Are you sure?",
+      wipeMsg2: "There is no undo. Only a safety copy can bring notes back.",
+      wipeConfirm: "Delete everything",
+      wiped: "Notebook cleared",
+      restoreMergeStats: "Added {added}, updated {updated}, already present {unchanged}",
       menu: "Menu",
       close: "Close",
       cancel: "Cancel",
@@ -1321,9 +1409,10 @@
       hideComposer: "Hide writer (read only)",
       showComposer: "Write",
       replaceConfirmTitle: "Replace everything?",
-      replaceConfirmMsg: "Your current journal will be replaced by this backup.",
+      replaceConfirmMsg: "Your current journal will be replaced by this copy. This cannot be undone.",
       inspiredBy: "Inspired by interstitial journaling for ADHD.",
       inspirationLink: "Watch: Novie by the Sea (YouTube)",
+      dataPrivacyNote: "Notes stay on this device. We never upload them to a Liminal server.",
     },
     it: {
       title: "Liminal Journal",
@@ -1331,12 +1420,28 @@
       placeholder: "es. Ho aperto la cartella del progetto",
       save: "Salva",
       empty: "Questo angolo è quieto. Lo spazio per scrivere è già pronto sotto — basta un micro-passo.",
-      download: "Scarica backup",
-      restore: "Ripristina backup",
+      download: "Salva una copia di sicurezza",
+      restore: "Ripristina da una copia",
       shareDay: "Condividi questo giorno",
-      merge: "Unisci a quelli esistenti",
+      merge: "Aggiungi a quello che ho",
       replace: "Sostituisci tutto",
-      storageWarn: "Ti consiglio un backup — lo spazio si sta riempiendo. Puoi comunque salvare.",
+      storageWarn: "Lo spazio si sta riempiendo — salva una copia di sicurezza quando puoi. Puoi continuare a scrivere.",
+      lastBackupNever: "Nessuna copia di sicurezza ancora — i dati restano solo su questo telefono/browser.",
+      lastBackupAt: "Ultima copia di sicurezza: {date}",
+      backupReminder: "Vuoi salvare una copia di sicurezza? Ti protegge se il browser viene azzerato.",
+      backupReminderAction: "Salva copia",
+      backupReminderDismiss: "Più tardi",
+      copySaved: "Copia di sicurezza pronta",
+      copyShared: "Copia di sicurezza condivisa",
+      copyCancelled: "Condivisione annullata",
+      wipeAll: "Elimina tutto il diario…",
+      wipeTitle1: "Eliminare tutte le note?",
+      wipeMsg1: "Rimuove ogni voce su questo dispositivo. Tema e lingua restano.",
+      wipeTitle2: "Sei sicuro?",
+      wipeMsg2: "Non si può annullare. Solo una copia di sicurezza può riportare le note.",
+      wipeConfirm: "Elimina tutto",
+      wiped: "Diario svuotato",
+      restoreMergeStats: "Aggiunte {added}, aggiornate {updated}, già presenti {unchanged}",
       menu: "Menu",
       close: "Chiudi",
       cancel: "Annulla",
@@ -1375,9 +1480,10 @@
       hideComposer: "Nascondi scrittura (solo lettura)",
       showComposer: "Scrivi",
       replaceConfirmTitle: "Sostituire tutto?",
-      replaceConfirmMsg: "Il diario attuale verrà sostituito da questo backup.",
+      replaceConfirmMsg: "Il diario attuale verrà sostituito da questa copia. Non si può annullare.",
       inspiredBy: "Ispirato all’interstitial journaling per l’ADHD.",
       inspirationLink: "Guarda: Novie by the Sea (YouTube)",
+      dataPrivacyNote: "Le note restano su questo dispositivo. Non le carichiamo su un server di Liminal.",
     },
   };
 
@@ -1394,6 +1500,13 @@
     title: document.getElementById("app-title"),
     subtitle: document.getElementById("app-subtitle"),
     storageWarning: document.getElementById("storage-warning"),
+    backupReminder: document.getElementById("backup-reminder"),
+    backupReminderText: document.getElementById("backup-reminder-text"),
+    btnReminderBackup: document.getElementById("btn-reminder-backup"),
+    btnReminderDismiss: document.getElementById("btn-reminder-dismiss"),
+    lastBackupMeta: document.getElementById("last-backup-meta"),
+    dataPrivacyNote: document.getElementById("data-privacy-note"),
+    btnWipeAll: document.getElementById("btn-wipe-all"),
     dayLabelText: document.getElementById("day-label-text"),
     todayDot: document.getElementById("today-dot"),
     btnOpenCal: document.getElementById("btn-open-cal"),
@@ -1452,7 +1565,7 @@
     return {
       version: 1,
       entries: [],
-      settings: { theme: "system", lang: detectLang() },
+      settings: { theme: "system", lang: detectLang(), lastBackupAt: null },
     };
   }
 
@@ -1474,7 +1587,7 @@
       if (!data || typeof data !== "object") return;
       state = {
         version: 1,
-        entries: Array.isArray(data.entries) ? data.entries.filter(validEntry) : [],
+        entries: Array.isArray(data.entries) ? data.entries.filter(isValidEntry) : [],
         settings: {
           theme: normalizeTheme(data.settings && data.settings.theme),
           lang:
@@ -1483,13 +1596,13 @@
               : data.settings && data.settings.lang === "en"
                 ? "en"
                 : detectLang(),
+          lastBackupAt:
+            data.settings && typeof data.settings.lastBackupAt === "string"
+              ? data.settings.lastBackupAt
+              : null,
         },
       };
     } catch (_) {}
-  }
-
-  function validEntry(e) {
-    return e && typeof e.id === "string" && typeof e.ts === "string" && typeof e.text === "string";
   }
 
   function normalizeTheme(v) {
@@ -1512,6 +1625,45 @@
     const show = bytes >= SOFT_BYTES || state.entries.length >= SOFT_COUNT;
     el.storageWarning.textContent = t("storageWarn");
     el.storageWarning.classList.toggle("visible", show);
+    updateBackupReminder();
+    updateLastBackupMeta();
+  }
+
+  function updateLastBackupMeta() {
+    if (!el.lastBackupMeta) return;
+    const last = state.settings.lastBackupAt;
+    if (!last) {
+      el.lastBackupMeta.textContent = t("lastBackupNever");
+      return;
+    }
+    const d = new Date(last);
+    const loc = state.settings.lang === "it" ? "it-IT" : "en-GB";
+    const label = Number.isNaN(d.getTime())
+      ? last
+      : d.toLocaleString(loc, { dateStyle: "medium", timeStyle: "short" });
+    el.lastBackupMeta.textContent = t("lastBackupAt").replace("{date}", label);
+  }
+
+  function updateBackupReminder() {
+    if (!el.backupReminder) return;
+    let dismissed = false;
+    try {
+      dismissed = sessionStorage.getItem(REMINDER_DISMISS_KEY) === "1";
+    } catch (_) {}
+    const show =
+      !dismissed &&
+      shouldShowBackupReminder(state.settings, state.entries.length, Date.now());
+    el.backupReminderText.textContent = t("backupReminder");
+    el.btnReminderBackup.textContent = t("backupReminderAction");
+    el.btnReminderDismiss.textContent = t("backupReminderDismiss");
+    el.backupReminder.classList.toggle("visible", show);
+  }
+
+  function dismissBackupReminder() {
+    try {
+      sessionStorage.setItem(REMINDER_DISMISS_KEY, "1");
+    } catch (_) {}
+    updateBackupReminder();
   }
 
   function applyTheme() {
@@ -1552,9 +1704,13 @@
     el.btnDownload.textContent = t("download");
     el.btnRestore.textContent = t("restore");
     el.btnShareDay.textContent = t("shareDay");
+    el.btnWipeAll.textContent = t("wipeAll");
     el.btnMenuClose.textContent = t("close");
     el.menuCredit.textContent = t("inspiredBy");
     el.linkInspiration.textContent = t("inspirationLink");
+    if (el.dataPrivacyNote) el.dataPrivacyNote.textContent = t("dataPrivacyNote");
+    updateLastBackupMeta();
+    updateBackupReminder();
     el.themeLabel.textContent = t("theme");
     el.themeValue.textContent = themeLabel();
     el.langLabel.textContent = t("lang");
@@ -1934,28 +2090,79 @@
     persist();
   }
 
-  function downloadBackup() {
-    const blob = new Blob(
-      [
-        JSON.stringify(
-          {
-            version: 1,
-            exportedAt: nowIso(),
-            entries: state.entries,
-            settings: state.settings,
-          },
-          null,
-          2
-        ),
-      ],
-      { type: "application/json" }
+  function buildBackupBlob() {
+    const payload = buildBackup(
+      { entries: state.entries, settings: state.settings },
+      nowIso()
     );
+    const text = serializeBackup(payload);
+    const name = backupFilename(new Date());
+    const blob = new Blob([text], { type: "application/json" });
+    return { blob, name, text };
+  }
+
+  function triggerDownload(blob, name) {
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = "liminal-journal-backup-" + localDateKey(new Date()) + ".json";
+    a.download = name;
     a.click();
     URL.revokeObjectURL(a.href);
-    toast(t("downloaded"));
+  }
+
+  function noteSafetyCopyDone() {
+    state.settings = markBackupDone(state.settings, nowIso());
+    try {
+      sessionStorage.removeItem(REMINDER_DISMISS_KEY);
+    } catch (_) {}
+    persist();
+    updateBackupReminder();
+    updateLastBackupMeta();
+  }
+
+  /** P1: share-first safety copy, download fallback */
+  async function saveSafetyCopy() {
+    const { blob, name } = buildBackupBlob();
+    const file = new File([blob], name, { type: "application/json" });
+    try {
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: "Liminal Journal",
+          text: t("download"),
+        });
+        noteSafetyCopyDone();
+        toast(t("copyShared"));
+        return;
+      }
+    } catch (err) {
+      if (err && err.name === "AbortError") {
+        toast(t("copyCancelled"));
+        return;
+      }
+      // fall through to download
+    }
+    triggerDownload(blob, name);
+    noteSafetyCopyDone();
+    toast(t("copySaved"));
+  }
+
+  /** @deprecated name kept for clarity in older call sites */
+  function downloadBackup() {
+    return saveSafetyCopy();
+  }
+
+  async function wipeAllEntries() {
+    const ok1 = await askConfirm(t("wipeTitle1"), t("wipeMsg1"), t("wipeConfirm"));
+    if (!ok1) return;
+    const ok2 = await askConfirm(t("wipeTitle2"), t("wipeMsg2"), t("wipeConfirm"));
+    if (!ok2) return;
+    const cleared = clearAllEntries(state);
+    state.entries = cleared.entries;
+    editingId = null;
+    openEntryId = null;
+    persist();
+    renderLog();
+    toast(t("wiped"));
   }
 
   function dayPlainText(dayKey) {
@@ -2000,18 +2207,21 @@
     const reader = new FileReader();
     reader.onload = () => {
       try {
-        const data = JSON.parse(String(reader.result || ""));
-        const entries = Array.isArray(data.entries) ? data.entries.filter(validEntry) : [];
-        if (!entries.length) {
+        const data = parseBackup(String(reader.result || ""));
+        if (!data.entries.length) {
           toast(t("restoreEmpty"));
           return;
         }
-        const days = entries.map(entryDayKey).filter(Boolean).sort();
-        pendingRestore = { entries: entries, settings: data.settings || null };
+        const range = summarizeEntryRange(data.entries, (ts) => {
+          const d = new Date(ts);
+          if (Number.isNaN(d.getTime())) return "";
+          return localDateKey(d);
+        });
+        pendingRestore = { entries: data.entries, settings: data.settings || null };
         el.restoreSummary.textContent = t("restoreSummary")
-          .replace("{count}", String(entries.length))
-          .replace("{from}", days[0] || "—")
-          .replace("{to}", days[days.length - 1] || "—");
+          .replace("{count}", String(range.count))
+          .replace("{from}", range.from || "—")
+          .replace("{to}", range.to || "—");
         el.restoreDialog.showModal();
       } catch (_) {
         toast(t("restoreBad"));
@@ -2022,25 +2232,35 @@
 
   function mergeRestore() {
     if (!pendingRestore) return;
-    const map = new Map(state.entries.map((e) => [e.id, e]));
-    for (const e of pendingRestore.entries) map.set(e.id, e);
-    state.entries = Array.from(map.values());
+    const result = mergeEntries(state.entries, pendingRestore.entries);
+    state.entries = result.entries;
     pendingRestore = null;
     persist();
     el.restoreDialog.close();
     renderLog();
-    toast(t("restored"));
+    toast(
+      t("restored") +
+        " — " +
+        t("restoreMergeStats")
+          .replace("{added}", String(result.added))
+          .replace("{updated}", String(result.updated))
+          .replace("{unchanged}", String(result.unchanged))
+    );
   }
 
   async function replaceRestore() {
     if (!pendingRestore) return;
     const ok = await askConfirm(t("replaceConfirmTitle"), t("replaceConfirmMsg"), t("replace"));
     if (!ok) return;
-    state.entries = pendingRestore.entries.slice();
+    const result = replaceEntries(pendingRestore.entries);
+    state.entries = result.entries;
     if (pendingRestore.settings) {
       state.settings.theme = normalizeTheme(pendingRestore.settings.theme);
       if (pendingRestore.settings.lang === "it" || pendingRestore.settings.lang === "en") {
         state.settings.lang = pendingRestore.settings.lang;
+      }
+      if (typeof pendingRestore.settings.lastBackupAt === "string") {
+        state.settings.lastBackupAt = pendingRestore.settings.lastBackupAt;
       }
     }
     pendingRestore = null;
@@ -2229,7 +2449,7 @@
     el.btnMenuClose.addEventListener("click", () => el.menuDialog.close());
     el.btnDownload.addEventListener("click", () => {
       el.menuDialog.close();
-      downloadBackup();
+      saveSafetyCopy();
     });
     el.btnRestore.addEventListener("click", () => {
       el.menuDialog.close();
@@ -2238,6 +2458,16 @@
     el.btnShareDay.addEventListener("click", () => {
       el.menuDialog.close();
       shareDay();
+    });
+    el.btnWipeAll.addEventListener("click", () => {
+      el.menuDialog.close();
+      wipeAllEntries();
+    });
+    el.btnReminderBackup.addEventListener("click", () => {
+      saveSafetyCopy();
+    });
+    el.btnReminderDismiss.addEventListener("click", () => {
+      dismissBackupReminder();
     });
 
     el.fileInput.addEventListener("change", () => {
@@ -2292,7 +2522,6 @@
   }
 
   init();
-})();
   </script>
 </body>
 </html>

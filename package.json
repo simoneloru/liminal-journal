@@ -1,0 +1,9 @@
+{
+  "name": "liminal-journal",
+  "private": true,
+  "type": "module",
+  "description": "Minimal interstitial journaling SPA",
+  "scripts": {
+    "test": "node --test tests/*.test.js"
+  }
+}
