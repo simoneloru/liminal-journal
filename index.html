@@ -371,10 +371,19 @@
       position: relative;
       padding: 0.55rem 0 8.5rem;
       min-height: 42vh;
+      transition: padding-bottom 0.2s var(--ease);
+    }
+
+    body.composer-hidden main#log {
+      padding-bottom: 6rem;
     }
 
     .entry:last-child {
       scroll-margin-bottom: 9rem;
+    }
+
+    body.composer-hidden .entry:last-child {
+      scroll-margin-bottom: 6rem;
     }
 
     /* Full-page write mode: hide log & chrome so attention stays on "now" */
@@ -586,7 +595,75 @@
     .composer-compact-row {
       display: flex;
       align-items: flex-end;
-      gap: 0.4rem;
+      gap: 0.35rem;
+    }
+
+    .btn-hide-composer {
+      flex: 0 0 auto;
+      min-height: 2.75rem;
+      width: 2.4rem;
+      min-width: 2.4rem;
+      padding: 0;
+      border: none;
+      box-shadow: none;
+      background: transparent;
+      color: var(--fg-faint);
+      border-radius: 10px;
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+      .btn-hide-composer:hover {
+        color: var(--fg-muted);
+        background: color-mix(in srgb, var(--fg) 6%, transparent);
+      }
+    }
+
+    .composer.is-expanded .btn-hide-composer {
+      display: none;
+    }
+
+    /* Reading mode: composer dock hidden, FAB restores write */
+    body.composer-hidden .composer {
+      display: none;
+    }
+
+    .fab-write {
+      position: fixed;
+      right: max(1rem, env(safe-area-inset-right, 0px));
+      bottom: calc(1rem + var(--safe-b));
+      z-index: 35;
+      width: 3.5rem;
+      height: 3.5rem;
+      min-height: 3.5rem;
+      min-width: 3.5rem;
+      padding: 0;
+      border: none;
+      border-radius: 50%;
+      background: var(--accent);
+      color: var(--accent-fg);
+      box-shadow: var(--shadow-md), 0 4px 14px color-mix(in srgb, var(--accent) 28%, transparent);
+      display: none;
+      place-items: center;
+      font-size: 1.75rem;
+      font-weight: 400;
+      line-height: 1;
+    }
+
+    body.composer-hidden .fab-write {
+      display: grid;
+    }
+
+    .fab-write svg {
+      width: 1.45rem;
+      height: 1.45rem;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+    }
+
+    body.composer-expanded .fab-write {
+      display: none !important;
     }
 
     #composer-text {
@@ -923,6 +1000,10 @@
       border: 0;
     }
 
+    body.composer-hidden .toast {
+      bottom: calc(5.2rem + var(--safe-b));
+    }
+
     .toast {
       position: fixed;
       left: 50%;
@@ -1079,6 +1160,9 @@
             </button>
           </div>
           <div class="composer-compact-row">
+            <button type="button" class="btn-hide-composer icon" id="btn-hide-composer" aria-label="Hide composer">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 10l6 6 6-6"/></svg>
+            </button>
             <label class="sr-only" for="composer-text">Entry</label>
             <textarea
               id="composer-text"
@@ -1100,6 +1184,10 @@
         </div>
       </div>
     </div>
+
+    <button type="button" class="fab-write" id="btn-show-composer" aria-label="Write">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+    </button>
   </div>
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -1230,6 +1318,8 @@
       collapse: "Back to log",
       expandTitle: "Just this moment",
       expandHint: "Log is hidden so you can stay with the next tiny step. Enter for a new line · ⌘/Ctrl+Enter to save.",
+      hideComposer: "Hide writer (read only)",
+      showComposer: "Write",
       replaceConfirmTitle: "Replace everything?",
       replaceConfirmMsg: "Your current journal will be replaced by this backup.",
       inspiredBy: "Inspired by interstitial journaling for ADHD.",
@@ -1282,6 +1372,8 @@
       collapse: "Torna al log",
       expandTitle: "Solo questo momento",
       expandHint: "Il log è nascosto così resti sul prossimo micro-passo. Invio = a capo · ⌘/Ctrl+Invio = salva.",
+      hideComposer: "Nascondi scrittura (solo lettura)",
+      showComposer: "Scrivi",
       replaceConfirmTitle: "Sostituire tutto?",
       replaceConfirmMsg: "Il diario attuale verrà sostituito da questo backup.",
       inspiredBy: "Ispirato all’interstitial journaling per l’ADHD.",
@@ -1313,6 +1405,8 @@
     btnSave: document.getElementById("btn-save"),
     btnExpand: document.getElementById("btn-expand"),
     btnCollapse: document.getElementById("btn-collapse"),
+    btnHideComposer: document.getElementById("btn-hide-composer"),
+    btnShowComposer: document.getElementById("btn-show-composer"),
     composerExpandTitle: document.getElementById("composer-expand-title"),
     composerDay: document.getElementById("composer-day"),
     composerHintExpanded: document.getElementById("composer-hint-expanded"),
@@ -1450,6 +1544,10 @@
     el.btnExpand.title = t("expand");
     el.btnCollapse.setAttribute("aria-label", t("collapse"));
     el.btnCollapse.title = t("collapse");
+    el.btnHideComposer.setAttribute("aria-label", t("hideComposer"));
+    el.btnHideComposer.title = t("hideComposer");
+    el.btnShowComposer.setAttribute("aria-label", t("showComposer"));
+    el.btnShowComposer.title = t("showComposer");
     el.menuTitle.textContent = t("menu");
     el.btnDownload.textContent = t("download");
     el.btnRestore.textContent = t("restore");
@@ -1760,7 +1858,28 @@
     return el.composerRoot.classList.contains("is-expanded");
   }
 
+  function isComposerHidden() {
+    return document.body.classList.contains("composer-hidden");
+  }
+
+  /** Reading mode: hide dock. Default on load is always visible (low write friction). */
+  function setComposerHidden(hidden) {
+    if (hidden) {
+      setComposerExpanded(false);
+    }
+    document.body.classList.toggle("composer-hidden", hidden);
+    if (!hidden) {
+      queueMicrotask(() => {
+        el.composer.focus();
+      });
+    }
+  }
+
   function setComposerExpanded(on) {
+    if (on) {
+      // Cannot expand while in read-only dock-hidden mode
+      document.body.classList.remove("composer-hidden");
+    }
     el.composerRoot.classList.toggle("is-expanded", on);
     document.body.classList.toggle("composer-expanded", on);
     el.composer.setAttribute("rows", on ? "12" : "1");
@@ -2045,6 +2164,8 @@
     el.btnSave.addEventListener("click", saveComposer);
     el.btnExpand.addEventListener("click", () => setComposerExpanded(true));
     el.btnCollapse.addEventListener("click", () => setComposerExpanded(false));
+    el.btnHideComposer.addEventListener("click", () => setComposerHidden(true));
+    el.btnShowComposer.addEventListener("click", () => setComposerHidden(false));
     el.composer.addEventListener("keydown", (e) => {
       if (e.key === "Escape" && isComposerExpanded()) {
         e.preventDefault();
