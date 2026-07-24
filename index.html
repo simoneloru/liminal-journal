@@ -1875,10 +1875,24 @@
     }
   }
 
+  function scrollPageToTop() {
+    // iOS: after reading the log, scrollY stays high; full-page expand + keyboard
+    // then shows the bottom (Save) while the caret at the top is off-screen.
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    try {
+      window.scrollTo({ top: 0, left: 0, behavior: reduce ? "auto" : "instant" in window ? "instant" : "auto" });
+    } catch (_) {
+      window.scrollTo(0, 0);
+    }
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }
+
   function setComposerExpanded(on) {
     if (on) {
       // Cannot expand while in read-only dock-hidden mode
       document.body.classList.remove("composer-hidden");
+      scrollPageToTop();
     }
     el.composerRoot.classList.toggle("is-expanded", on);
     document.body.classList.toggle("composer-expanded", on);
@@ -1888,12 +1902,20 @@
       el.composerDay.textContent = formatDayLabel(selectedDay);
       el.composerExpandTitle.textContent = t("expandTitle");
       el.composerHintExpanded.textContent = t("expandHint");
-      queueMicrotask(() => {
-        el.composer.focus();
-        const len = el.composer.value.length;
-        try {
-          el.composer.setSelectionRange(len, len);
-        } catch (_) {}
+      // Double rAF: wait for layout after expand class, then focus
+      requestAnimationFrame(() => {
+        scrollPageToTop();
+        requestAnimationFrame(() => {
+          el.composer.focus({ preventScroll: false });
+          const len = el.composer.value.length;
+          try {
+            el.composer.setSelectionRange(len, len);
+          } catch (_) {}
+          // Keep caret region visible inside the textarea if needed
+          try {
+            el.composer.scrollTop = 0;
+          } catch (_) {}
+        });
       });
     }
   }
