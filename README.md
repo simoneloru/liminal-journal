@@ -93,7 +93,7 @@ MVP remains useful offline and private; cloud is a product expansion, not a half
 ### Day log + day picker
 - **Default view:** today (local calendar date).
 - **Navigate days:** previous / next day controls + **date picker** (`<input type="date">` or equivalent) to jump to any day that has data (and empty days for writing “backfilled” notes if the user wants — same save path).
-- Entries for the **selected day**, **newest first**.
+- Entries for the **selected day**, **oldest first** (insertion order; newest at the bottom, near the composer).
 - Empty state copy that nudges micro-steps.
 
 ### Micro-tasks (copy, not a validator)
