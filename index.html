@@ -366,6 +366,46 @@
       background: var(--danger-soft);
     }
 
+    .wipe-type-hint {
+      margin: 0.35rem 0 0.55rem !important;
+      font-size: 0.88rem !important;
+      color: var(--fg) !important;
+    }
+
+    .wipe-type-hint code {
+      font-family: var(--mono);
+      font-size: 0.9em;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      padding: 0.1rem 0.35rem;
+      border-radius: 6px;
+      background: color-mix(in srgb, var(--danger) 12%, var(--bg));
+      color: var(--danger);
+    }
+
+    .wipe-confirm-input {
+      width: 100%;
+      min-height: 2.75rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--bg);
+      padding: 0.55rem 0.75rem;
+      font-family: var(--mono);
+      font-size: 1rem;
+      letter-spacing: 0.04em;
+    }
+
+    .wipe-confirm-input:focus {
+      outline: none;
+      border-color: color-mix(in srgb, var(--danger) 45%, var(--border));
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger) 22%, transparent);
+    }
+
+    #btn-wipe-confirm:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
     /* Day bar: prev | open month calendar | next */
     .day-bar {
       display: grid;
@@ -1320,6 +1360,27 @@
     </div>
   </dialog>
 
+  <dialog id="wipe-dialog">
+    <div class="dialog-body">
+      <h2 id="wipe-dialog-title"></h2>
+      <p id="wipe-dialog-message"></p>
+      <p class="wipe-type-hint" id="wipe-type-hint"></p>
+      <label class="sr-only" for="wipe-confirm-input" id="wipe-input-label"></label>
+      <input
+        type="text"
+        id="wipe-confirm-input"
+        class="wipe-confirm-input"
+        autocomplete="off"
+        autocapitalize="characters"
+        spellcheck="false"
+      />
+    </div>
+    <div class="dialog-actions">
+      <button type="button" class="ghost" id="btn-wipe-cancel"></button>
+      <button type="button" class="danger" id="btn-wipe-confirm" disabled></button>
+    </div>
+  </dialog>
+
   <input type="file" id="file-input" accept="application/json,.json" hidden />
 
   <script type="module">
@@ -1364,10 +1425,11 @@
       copyShared: "Safety copy shared",
       copyCancelled: "Share cancelled",
       wipeAll: "Delete entire notebook…",
-      wipeTitle1: "Delete all notes?",
-      wipeMsg1: "This removes every entry on this device. Theme and language stay.",
-      wipeTitle2: "Are you sure?",
-      wipeMsg2: "There is no undo. Only a safety copy can bring notes back.",
+      wipeTitle: "Delete entire notebook",
+      wipeMsg: "This permanently removes every entry on this device. Theme and language stay. Only a safety copy can bring notes back.",
+      wipeTypeHint: "Type {word} to confirm.",
+      wipeKeyword: "DELETE",
+      wipeInputLabel: "Confirmation word",
       wipeConfirm: "Delete everything",
       wiped: "Notebook cleared",
       restoreMergeStats: "Added {added}, updated {updated}, already present {unchanged}",
@@ -1435,10 +1497,11 @@
       copyShared: "Copia di sicurezza condivisa",
       copyCancelled: "Condivisione annullata",
       wipeAll: "Elimina tutto il diario…",
-      wipeTitle1: "Eliminare tutte le note?",
-      wipeMsg1: "Rimuove ogni voce su questo dispositivo. Tema e lingua restano.",
-      wipeTitle2: "Sei sicuro?",
-      wipeMsg2: "Non si può annullare. Solo una copia di sicurezza può riportare le note.",
+      wipeTitle: "Elimina tutto il diario",
+      wipeMsg: "Rimuove per sempre ogni voce su questo dispositivo. Tema e lingua restano. Solo una copia di sicurezza può riportare le note.",
+      wipeTypeHint: "Digita {word} per confermare.",
+      wipeKeyword: "ELIMINA",
+      wipeInputLabel: "Parola di conferma",
       wipeConfirm: "Elimina tutto",
       wiped: "Diario svuotato",
       restoreMergeStats: "Aggiunte {added}, aggiornate {updated}, già presenti {unchanged}",
@@ -1557,9 +1620,19 @@
     confirmMessage: document.getElementById("confirm-message"),
     btnConfirmCancel: document.getElementById("btn-confirm-cancel"),
     btnConfirmOk: document.getElementById("btn-confirm-ok"),
+    wipeDialog: document.getElementById("wipe-dialog"),
+    wipeDialogTitle: document.getElementById("wipe-dialog-title"),
+    wipeDialogMessage: document.getElementById("wipe-dialog-message"),
+    wipeTypeHint: document.getElementById("wipe-type-hint"),
+    wipeInputLabel: document.getElementById("wipe-input-label"),
+    wipeConfirmInput: document.getElementById("wipe-confirm-input"),
+    btnWipeCancel: document.getElementById("btn-wipe-cancel"),
+    btnWipeConfirm: document.getElementById("btn-wipe-confirm"),
     fileInput: document.getElementById("file-input"),
     toast: document.getElementById("toast"),
   };
+
+  let wipeResolver = null;
 
   function defaultState() {
     return {
@@ -2151,11 +2224,50 @@
     return saveSafetyCopy();
   }
 
+  function wipeKeyword() {
+    return t("wipeKeyword");
+  }
+
+  function syncWipeConfirmEnabled() {
+    const expected = wipeKeyword();
+    const typed = (el.wipeConfirmInput.value || "").trim();
+    // Case-insensitive so mobile keyboards are less painful; still must match the word.
+    el.btnWipeConfirm.disabled = typed.toLocaleUpperCase() !== expected.toLocaleUpperCase();
+  }
+
+  function askWipeConfirm() {
+    el.wipeDialogTitle.textContent = t("wipeTitle");
+    el.wipeDialogMessage.textContent = t("wipeMsg");
+    const word = wipeKeyword();
+    el.wipeTypeHint.innerHTML = t("wipeTypeHint").replace(
+      "{word}",
+      "<code>" + word + "</code>"
+    );
+    el.wipeInputLabel.textContent = t("wipeInputLabel");
+    el.btnWipeCancel.textContent = t("cancel");
+    el.btnWipeConfirm.textContent = t("wipeConfirm");
+    el.wipeConfirmInput.value = "";
+    el.wipeConfirmInput.placeholder = word;
+    syncWipeConfirmEnabled();
+    el.wipeDialog.showModal();
+    queueMicrotask(() => el.wipeConfirmInput.focus());
+    return new Promise((resolve) => {
+      wipeResolver = resolve;
+    });
+  }
+
+  function finishWipeDialog(ok) {
+    if (el.wipeDialog.open) el.wipeDialog.close();
+    if (wipeResolver) {
+      const r = wipeResolver;
+      wipeResolver = null;
+      r(ok);
+    }
+  }
+
   async function wipeAllEntries() {
-    const ok1 = await askConfirm(t("wipeTitle1"), t("wipeMsg1"), t("wipeConfirm"));
-    if (!ok1) return;
-    const ok2 = await askConfirm(t("wipeTitle2"), t("wipeMsg2"), t("wipeConfirm"));
-    if (!ok2) return;
+    const ok = await askWipeConfirm();
+    if (!ok) return;
     const cleared = clearAllEntries(state);
     state.entries = cleared.entries;
     editingId = null;
@@ -2500,6 +2612,25 @@
       if (confirmResolver) {
         confirmResolver(false);
         confirmResolver = null;
+      }
+    });
+
+    el.wipeConfirmInput.addEventListener("input", syncWipeConfirmEnabled);
+    el.wipeConfirmInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        if (!el.btnWipeConfirm.disabled) finishWipeDialog(true);
+      }
+    });
+    el.btnWipeCancel.addEventListener("click", () => finishWipeDialog(false));
+    el.btnWipeConfirm.addEventListener("click", () => {
+      if (!el.btnWipeConfirm.disabled) finishWipeDialog(true);
+    });
+    el.wipeDialog.addEventListener("close", () => {
+      if (wipeResolver) {
+        const r = wipeResolver;
+        wipeResolver = null;
+        r(false);
       }
     });
 
