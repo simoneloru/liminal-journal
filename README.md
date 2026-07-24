@@ -6,7 +6,12 @@ A minimal web app for **interstitial journaling**: write what you’re doing *ri
 
 Built for ADHD brains (and anyone who freezes at “big tasks”). Mobile-first. Data stays in **your browser**.
 
-Inspired by [Novie by the Sea on interstitial journaling](https://www.youtube.com/watch?v=UFidZJhxz84).
+### Watch (inspiration)
+
+- [The BEST Productivity Method Ever for ADHD | Interstitial Journaling](https://www.youtube.com/watch?v=UFidZJhxz84) — **Novie by the Sea** (how this project got started)
+- Optional follow-up: [A Practical Walkthrough](https://www.youtube.com/watch?v=FUr4hQ8ibxk) (same creator)
+
+Independent tool — not affiliated with the video creator.
 
 ---
 
@@ -17,6 +22,8 @@ Most “productivity” tools want a plan. Interstitial journaling only asks:
 > What am I doing? What’s the next micro-step?
 
 Timestamps are automatic. Friction is the enemy. If a control doesn’t help you write the next line in a few seconds, it shouldn’t be on the screen.
+
+**On paper the whole method is:** write the time → what you’re doing → when you switch, write the next thing → repeat when your brain drifts. (Optionally: how you feel.)
 
 ---
 
