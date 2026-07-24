@@ -8,61 +8,87 @@
   <meta name="description" content="Liminal Journal — a minimal app for interstitial journaling. Log tiny steps, stay in the present." />
   <title>Liminal Journal</title>
   <style>
+    /* Liminal Journal — calm “threshold” UI: warm paper, soft sage, low noise */
     :root {
-      --bg: #f4f2ee;
-      --bg-elevated: #fffcf8;
-      --fg: #1c1b19;
-      --fg-muted: #5c5a55;
-      --border: #ddd8cf;
-      --accent: #2f4a3c;
-      --accent-fg: #f4f2ee;
-      --danger: #8b3a2f;
-      --danger-bg: #f8ebe8;
-      --warn-bg: #f5eedc;
-      --warn-fg: #5a4a22;
-      --shadow: 0 1px 2px rgb(0 0 0 / 6%);
-      --radius: 12px;
-      --font: "Segoe UI", system-ui, -apple-system, sans-serif;
-      --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      --bg: #f3efe7;
+      --bg-soft: #ebe5d9;
+      --bg-elevated: #fffcf7;
+      --fg: #1a1916;
+      --fg-muted: #6b675f;
+      --fg-faint: #938e84;
+      --border: #e0d9cc;
+      --border-strong: #cfc6b6;
+      --accent: #3d5c4a;
+      --accent-soft: #e7f0ea;
+      --accent-fg: #f7faf8;
+      --danger: #9a4034;
+      --danger-soft: #f7ebe8;
+      --warn-bg: #f4ead0;
+      --warn-fg: #5c4a1f;
+      --shadow-sm: 0 1px 2px rgb(40 32 18 / 4%);
+      --shadow-md: 0 4px 16px rgb(40 32 18 / 6%), 0 1px 3px rgb(40 32 18 / 4%);
+      --shadow-lg: 0 18px 50px rgb(20 16 10 / 16%);
+      --radius: 14px;
+      --radius-sm: 10px;
+      --radius-pill: 999px;
+      --font: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua",
+        "Segoe UI", system-ui, -apple-system, sans-serif;
+      --font-ui: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      --mono: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
       --tap: 44px;
       --safe-b: env(safe-area-inset-bottom, 0px);
       --safe-t: env(safe-area-inset-top, 0px);
-      --composer-h: auto;
-      --max: 40rem;
+      --max: 36rem;
+      --header-h: 3.75rem;
+      --ease: cubic-bezier(0.22, 1, 0.36, 1);
+      --focus: 0 0 0 3px color-mix(in srgb, var(--accent) 35%, transparent);
     }
 
     html[data-theme="dark"] {
-      --bg: #161513;
-      --bg-elevated: #1f1e1b;
-      --fg: #eceae4;
-      --fg-muted: #a8a59c;
-      --border: #333029;
-      --accent: #8fb9a0;
-      --accent-fg: #132018;
-      --danger: #e0958a;
-      --danger-bg: #2a1a17;
-      --warn-bg: #2a2416;
-      --warn-fg: #e6d7a8;
-      --shadow: 0 1px 2px rgb(0 0 0 / 35%);
+      --bg: #141311;
+      --bg-soft: #1a1916;
+      --bg-elevated: #1e1c19;
+      --fg: #f0ebe3;
+      --fg-muted: #a39e94;
+      --fg-faint: #736e65;
+      --border: #2e2b26;
+      --border-strong: #403c35;
+      --accent: #8fbc9f;
+      --accent-soft: #243029;
+      --accent-fg: #0f1612;
+      --danger: #e8a399;
+      --danger-soft: #2c1c19;
+      --warn-bg: #2c2618;
+      --warn-fg: #e8d7a4;
+      --shadow-sm: 0 1px 2px rgb(0 0 0 / 28%);
+      --shadow-md: 0 6px 20px rgb(0 0 0 / 28%), 0 1px 3px rgb(0 0 0 / 22%);
+      --shadow-lg: 0 22px 56px rgb(0 0 0 / 45%);
     }
 
     *, *::before, *::after { box-sizing: border-box; }
 
-    html, body {
-      margin: 0;
-      padding: 0;
+    html {
       min-height: 100%;
       background: var(--bg);
-      color: var(--fg);
-      font-family: var(--font);
-      font-size: 16px;
-      line-height: 1.45;
-      -webkit-text-size-adjust: 100%;
+      color-scheme: light dark;
     }
 
     body {
+      margin: 0;
+      min-height: 100%;
+      color: var(--fg);
+      font-family: var(--font-ui);
+      font-size: 16px;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      -webkit-text-size-adjust: 100%;
       padding-top: var(--safe-t);
-      padding-bottom: calc(var(--safe-b) + 0.5rem);
+      padding-bottom: calc(var(--safe-b) + 0.25rem);
+      background:
+        radial-gradient(120% 70% at 50% -10%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 55%),
+        radial-gradient(80% 50% at 100% 20%, color-mix(in srgb, var(--bg-soft) 80%, transparent), transparent 50%),
+        var(--bg);
+      background-attachment: fixed;
     }
 
     button, input, textarea {
@@ -74,19 +100,29 @@
       cursor: pointer;
       border: 1px solid var(--border);
       background: var(--bg-elevated);
-      border-radius: 10px;
+      border-radius: var(--radius-sm);
       min-height: var(--tap);
-      padding: 0.55rem 0.85rem;
-      box-shadow: var(--shadow);
+      padding: 0.55rem 0.95rem;
+      box-shadow: var(--shadow-sm);
+      transition: background 0.15s var(--ease), border-color 0.15s var(--ease),
+        transform 0.12s var(--ease), box-shadow 0.15s var(--ease);
+      -webkit-tap-highlight-color: transparent;
     }
 
-    button:hover { filter: brightness(0.98); }
+    @media (hover: hover) and (pointer: fine) {
+      button:hover {
+        border-color: var(--border-strong);
+        background: color-mix(in srgb, var(--bg-elevated) 88%, var(--bg-soft));
+      }
+    }
+
     button:active { transform: translateY(1px); }
+
     button:focus-visible,
     input:focus-visible,
     textarea:focus-visible {
-      outline: 2px solid var(--accent);
-      outline-offset: 2px;
+      outline: none;
+      box-shadow: var(--focus);
     }
 
     button.primary {
@@ -94,16 +130,35 @@
       color: var(--accent-fg);
       border-color: transparent;
       font-weight: 600;
+      letter-spacing: 0.01em;
+      box-shadow: 0 1px 0 color-mix(in srgb, #000 12%, transparent), var(--shadow-sm);
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+      button.primary:hover {
+        background: color-mix(in srgb, var(--accent) 92%, #000);
+        border-color: transparent;
+      }
     }
 
     button.ghost {
       background: transparent;
       box-shadow: none;
+      border-color: transparent;
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+      button.ghost:hover {
+        background: color-mix(in srgb, var(--fg) 6%, transparent);
+        border-color: transparent;
+      }
     }
 
     button.danger {
       color: var(--danger);
-      border-color: color-mix(in srgb, var(--danger) 35%, var(--border));
+      background: var(--danger-soft);
+      border-color: color-mix(in srgb, var(--danger) 22%, var(--border));
+      box-shadow: none;
     }
 
     button.icon {
@@ -112,224 +167,467 @@
       padding: 0;
       display: inline-grid;
       place-items: center;
-      font-size: 1.15rem;
+      font-size: 1.05rem;
       line-height: 1;
+      color: var(--fg-muted);
+      border-radius: var(--radius-sm);
+    }
+
+    button.icon svg {
+      width: 1.15rem;
+      height: 1.15rem;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.75;
+      stroke-linecap: round;
+      stroke-linejoin: round;
     }
 
     .wrap {
-      width: min(100% - 1.25rem, var(--max));
+      width: min(100% - 1.5rem, var(--max));
       margin-inline: auto;
     }
 
+    /* —— Header —— */
     header.app-header {
       position: sticky;
       top: 0;
       z-index: 20;
-      background: color-mix(in srgb, var(--bg) 92%, transparent);
-      backdrop-filter: blur(10px);
-      border-bottom: 1px solid var(--border);
-      padding: 0.65rem 0 0.55rem;
+      padding: 0.7rem 0 0.65rem;
+      background: color-mix(in srgb, var(--bg) 78%, transparent);
+      backdrop-filter: saturate(1.2) blur(14px);
+      -webkit-backdrop-filter: saturate(1.2) blur(14px);
+      border-bottom: 1px solid color-mix(in srgb, var(--border) 85%, transparent);
     }
 
     .header-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 0.75rem;
+      gap: 0.85rem;
     }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      flex: 0 0 auto;
+      width: 2.25rem;
+      height: 2.25rem;
+      border-radius: 11px;
+      display: grid;
+      place-items: center;
+      background:
+        linear-gradient(145deg, color-mix(in srgb, var(--accent) 18%, var(--bg-elevated)), var(--bg-elevated));
+      border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--border));
+      box-shadow: var(--shadow-sm);
+      color: var(--accent);
+    }
+
+    .brand-mark svg {
+      width: 1.15rem;
+      height: 1.15rem;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.7;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .brand-text { min-width: 0; }
 
     .brand h1 {
       margin: 0;
-      font-size: 1.05rem;
-      font-weight: 650;
-      letter-spacing: -0.01em;
+      font-family: var(--font);
+      font-size: 1.12rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
     }
 
     .brand p {
-      margin: 0.1rem 0 0;
-      font-size: 0.8rem;
+      margin: 0.18rem 0 0;
+      font-family: var(--font-ui);
+      font-size: 0.78rem;
+      line-height: 1.3;
       color: var(--fg-muted);
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
     }
 
     .header-actions {
       display: flex;
-      gap: 0.35rem;
+      gap: 0.2rem;
       align-items: center;
+      flex: 0 0 auto;
+      padding: 0.15rem;
+      border-radius: 12px;
+      background: color-mix(in srgb, var(--bg-elevated) 70%, transparent);
+      border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+    }
+
+    .header-actions .icon {
+      min-height: 2.4rem;
+      width: 2.4rem;
+      min-width: 2.4rem;
+    }
+
+    #btn-lang {
+      font-family: var(--font-ui);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: var(--fg);
     }
 
     #storage-warning {
       display: none;
-      margin: 0.75rem auto 0;
-      padding: 0.7rem 0.85rem;
-      border-radius: var(--radius);
+      margin: 0.7rem auto 0;
+      padding: 0.7rem 0.9rem;
+      border-radius: var(--radius-sm);
       background: var(--warn-bg);
       color: var(--warn-fg);
-      border: 1px solid color-mix(in srgb, var(--warn-fg) 25%, transparent);
-      font-size: 0.9rem;
+      border: 1px solid color-mix(in srgb, var(--warn-fg) 18%, transparent);
+      font-size: 0.86rem;
+      line-height: 1.4;
     }
 
     #storage-warning.visible { display: block; }
 
+    /* —— Day nav —— */
     .day-nav {
       display: flex;
       align-items: center;
-      gap: 0.45rem;
-      margin: 1rem auto 0.75rem;
+      gap: 0.4rem;
+      margin: 1rem auto 0.35rem;
+      padding: 0.3rem;
+      border-radius: 16px;
+      background: color-mix(in srgb, var(--bg-elevated) 88%, transparent);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .day-nav .icon {
+      border: none;
+      box-shadow: none;
+      background: transparent;
+      color: var(--fg);
     }
 
     .day-nav input[type="date"] {
       flex: 1;
-      min-height: var(--tap);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      background: var(--bg-elevated);
-      padding: 0.4rem 0.65rem;
-      box-shadow: var(--shadow);
+      min-width: 0;
+      min-height: 2.5rem;
+      border: none;
+      border-radius: var(--radius-sm);
+      background: transparent;
+      padding: 0.35rem 0.4rem;
+      font-family: var(--font-ui);
+      font-size: 0.95rem;
+      font-weight: 500;
+      font-variant-numeric: tabular-nums;
+      color: var(--fg);
+      box-shadow: none;
     }
 
+    .day-nav input[type="date"]:focus-visible {
+      background: color-mix(in srgb, var(--accent) 8%, transparent);
+    }
+
+    #btn-today {
+      flex: 0 0 auto;
+      min-height: 2.35rem;
+      padding: 0.35rem 0.7rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      border-radius: var(--radius-pill);
+      border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border));
+      background: var(--accent-soft);
+      color: var(--accent);
+      box-shadow: none;
+    }
+
+    /* —— Log —— */
     main#log {
-      padding-bottom: 12.5rem;
-      min-height: 40vh;
+      padding: 0.65rem 0 13.5rem;
+      min-height: 42vh;
     }
 
     .empty {
-      margin: 2rem 0;
+      margin: 2.75rem auto 1.5rem;
+      max-width: 18rem;
       text-align: center;
       color: var(--fg-muted);
+      padding: 1.5rem 1rem;
+    }
+
+    .empty-glyph {
+      width: 3.25rem;
+      height: 3.25rem;
+      margin: 0 auto 1rem;
+      border-radius: 50%;
+      border: 1px dashed color-mix(in srgb, var(--accent) 40%, var(--border));
+      display: grid;
+      place-items: center;
+      color: var(--accent);
+      opacity: 0.85;
+    }
+
+    .empty-glyph svg {
+      width: 1.35rem;
+      height: 1.35rem;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.6;
+      stroke-linecap: round;
+    }
+
+    .empty p {
+      margin: 0;
       font-size: 0.95rem;
-      padding: 0 0.5rem;
+      line-height: 1.45;
+      color: var(--fg-muted);
     }
 
     .entry {
+      position: relative;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 0.65rem 0.85rem;
       background: var(--bg-elevated);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 0.85rem 0.9rem;
-      margin: 0 0 0.65rem;
-      box-shadow: var(--shadow);
+      padding: 0.95rem 0.95rem 0.95rem 0.9rem;
+      margin: 0 0 0.7rem;
+      box-shadow: var(--shadow-sm);
+      transition: border-color 0.15s var(--ease), box-shadow 0.15s var(--ease);
     }
 
-    .entry-head {
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      gap: 0.5rem;
-      margin-bottom: 0.35rem;
+    .entry::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0.85rem;
+      bottom: 0.85rem;
+      width: 3px;
+      border-radius: 0 3px 3px 0;
+      background: color-mix(in srgb, var(--accent) 55%, var(--border));
+      opacity: 0.75;
     }
 
     .entry-time {
+      grid-column: 1;
+      grid-row: 1;
+      align-self: start;
+      margin-top: 0.12rem;
       font-family: var(--mono);
-      font-size: 0.85rem;
+      font-size: 0.78rem;
+      font-weight: 500;
+      letter-spacing: 0.02em;
       color: var(--fg-muted);
       font-variant-numeric: tabular-nums;
+      background: color-mix(in srgb, var(--bg-soft) 70%, var(--bg-elevated));
+      border: 1px solid color-mix(in srgb, var(--border) 90%, transparent);
+      border-radius: var(--radius-pill);
+      padding: 0.22rem 0.55rem;
+      line-height: 1.2;
     }
 
     .entry-actions {
+      grid-column: 2;
+      grid-row: 1;
       display: flex;
-      gap: 0.25rem;
+      gap: 0.15rem;
+      justify-content: flex-end;
+      align-items: center;
     }
 
     .entry-actions button {
       min-height: 2rem;
-      padding: 0.25rem 0.55rem;
-      font-size: 0.8rem;
+      padding: 0.2rem 0.55rem;
+      font-size: 0.78rem;
+      font-weight: 500;
+      border: none;
+      box-shadow: none;
+      background: transparent;
+      color: var(--fg-faint);
+      border-radius: 8px;
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+      .entry-actions button:hover {
+        color: var(--fg);
+        background: color-mix(in srgb, var(--fg) 6%, transparent);
+      }
+      .entry-actions button.danger:hover {
+        color: var(--danger);
+        background: var(--danger-soft);
+      }
+    }
+
+    .entry-actions button.danger {
+      color: var(--fg-faint);
+      background: transparent;
+      border: none;
     }
 
     .entry-text {
+      grid-column: 1 / -1;
       white-space: pre-wrap;
       word-break: break-word;
       margin: 0;
+      font-family: var(--font);
+      font-size: 1.05rem;
+      line-height: 1.48;
+      letter-spacing: -0.01em;
+      color: var(--fg);
     }
+
+    .entry.editing {
+      grid-template-columns: 1fr;
+      gap: 0.55rem;
+      border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+      box-shadow: var(--shadow-md);
+    }
+
+    .entry.editing .entry-time { justify-self: start; }
 
     .entry.editing textarea {
       width: 100%;
-      min-height: 5rem;
+      min-height: 5.5rem;
       resize: vertical;
       border: 1px solid var(--border);
-      border-radius: 10px;
+      border-radius: var(--radius-sm);
       background: var(--bg);
-      padding: 0.65rem 0.75rem;
-      margin-top: 0.35rem;
+      padding: 0.75rem 0.85rem;
+      font-family: var(--font);
+      font-size: 1.05rem;
+      line-height: 1.45;
+      box-shadow: inset 0 1px 2px rgb(0 0 0 / 3%);
     }
 
     .entry-edit-actions {
       display: flex;
-      gap: 0.4rem;
-      margin-top: 0.55rem;
+      gap: 0.45rem;
       justify-content: flex-end;
     }
 
+    /* —— Composer dock —— */
     .composer {
       position: fixed;
       left: 0;
       right: 0;
       bottom: 0;
       z-index: 30;
-      background: color-mix(in srgb, var(--bg) 94%, transparent);
-      backdrop-filter: blur(12px);
-      border-top: 1px solid var(--border);
-      padding: 0.65rem 0 calc(0.65rem + var(--safe-b));
+      padding: 0.55rem 0 calc(0.55rem + var(--safe-b));
+      background:
+        linear-gradient(to top, color-mix(in srgb, var(--bg) 96%, transparent) 55%, transparent);
+      pointer-events: none;
+    }
+
+    .composer-shell {
+      pointer-events: auto;
+      border-radius: 18px;
+      border: 1px solid var(--border);
+      background: color-mix(in srgb, var(--bg-elevated) 94%, transparent);
+      backdrop-filter: blur(16px) saturate(1.15);
+      -webkit-backdrop-filter: blur(16px) saturate(1.15);
+      box-shadow: var(--shadow-md);
+      padding: 0.7rem 0.75rem 0.75rem;
     }
 
     .composer-inner {
       display: grid;
-      gap: 0.5rem;
+      gap: 0.55rem;
     }
 
     #composer-text {
       width: 100%;
-      min-height: 4.5rem;
+      min-height: 4.75rem;
       max-height: 10rem;
       resize: vertical;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
+      border: 1px solid transparent;
+      border-radius: 12px;
+      background: color-mix(in srgb, var(--bg) 55%, var(--bg-elevated));
+      padding: 0.8rem 0.85rem;
+      font-family: var(--font);
+      font-size: 1.05rem;
+      line-height: 1.45;
+      letter-spacing: -0.01em;
+      box-shadow: inset 0 1px 2px rgb(0 0 0 / 3%);
+      transition: border-color 0.15s var(--ease), background 0.15s var(--ease), box-shadow 0.15s var(--ease);
+    }
+
+    #composer-text::placeholder {
+      color: var(--fg-faint);
+      opacity: 1;
+    }
+
+    #composer-text:focus {
+      border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
       background: var(--bg-elevated);
-      padding: 0.75rem 0.85rem;
-      box-shadow: var(--shadow);
+      box-shadow: var(--focus);
+      outline: none;
     }
 
     .composer-row {
       display: flex;
-      gap: 0.5rem;
+      gap: 0.55rem;
       align-items: center;
     }
 
     .composer-row .primary {
       flex: 1;
+      min-height: 2.75rem;
+      border-radius: 12px;
+      font-size: 0.98rem;
     }
 
     .hint {
-      font-size: 0.75rem;
-      color: var(--fg-muted);
+      font-size: 0.72rem;
+      color: var(--fg-faint);
+      display: none;
     }
 
+    /* —— Dialogs —— */
     dialog {
       border: 1px solid var(--border);
-      border-radius: 16px;
+      border-radius: 18px;
       background: var(--bg-elevated);
       color: var(--fg);
       padding: 0;
-      width: min(calc(100% - 2rem), 24rem);
-      box-shadow: 0 12px 40px rgb(0 0 0 / 18%);
+      width: min(calc(100% - 2rem), 22.5rem);
+      box-shadow: var(--shadow-lg);
     }
 
     dialog::backdrop {
-      background: rgb(0 0 0 / 45%);
+      background: rgb(18 16 12 / 42%);
+      backdrop-filter: blur(3px);
     }
 
     .dialog-body {
-      padding: 1.1rem 1.15rem 1rem;
+      padding: 1.2rem 1.2rem 0.85rem;
     }
 
     .dialog-body h2 {
-      margin: 0 0 0.5rem;
-      font-size: 1.05rem;
+      margin: 0 0 0.4rem;
+      font-family: var(--font);
+      font-size: 1.12rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
     }
 
     .dialog-body p {
-      margin: 0 0 0.75rem;
+      margin: 0 0 0.65rem;
       color: var(--fg-muted);
-      font-size: 0.92rem;
+      font-size: 0.9rem;
+      line-height: 1.45;
     }
 
     .dialog-actions {
@@ -337,32 +635,36 @@
       flex-wrap: wrap;
       gap: 0.45rem;
       justify-content: flex-end;
-      padding: 0 1.15rem 1.1rem;
+      padding: 0 1.15rem 1.15rem;
     }
 
     .menu-list {
       display: grid;
       gap: 0.4rem;
-      margin: 0.5rem 0 0;
+      margin: 0.65rem 0 0;
     }
 
     .menu-list button {
       width: 100%;
       text-align: left;
       justify-content: flex-start;
+      border-radius: 12px;
+      min-height: 2.85rem;
+      font-weight: 500;
     }
 
     .menu-credit {
-      margin: 0.85rem 0 0;
-      font-size: 0.8rem;
+      margin: 0.95rem 0 0;
+      font-size: 0.78rem;
       color: var(--fg-muted);
-      line-height: 1.4;
+      line-height: 1.45;
     }
 
     .menu-credit a {
       color: var(--accent);
       text-decoration: underline;
       text-underline-offset: 2px;
+      text-decoration-thickness: 1px;
     }
 
     .sr-only {
@@ -379,26 +681,50 @@
     .toast {
       position: fixed;
       left: 50%;
-      bottom: calc(10.5rem + var(--safe-b));
-      transform: translateX(-50%);
+      bottom: calc(11.25rem + var(--safe-b));
+      transform: translateX(-50%) translateY(6px);
       z-index: 40;
-      background: var(--fg);
+      background: color-mix(in srgb, var(--fg) 94%, var(--accent));
       color: var(--bg);
-      padding: 0.55rem 0.9rem;
-      border-radius: 999px;
-      font-size: 0.85rem;
+      padding: 0.55rem 1rem;
+      border-radius: var(--radius-pill);
+      font-size: 0.84rem;
+      font-weight: 500;
+      letter-spacing: 0.01em;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.2s ease;
+      transition: opacity 0.22s var(--ease), transform 0.22s var(--ease);
       max-width: min(90vw, 22rem);
       text-align: center;
+      box-shadow: var(--shadow-md);
     }
 
-    .toast.show { opacity: 0.95; }
+    .toast.show {
+      opacity: 0.96;
+      transform: translateX(-50%) translateY(0);
+    }
 
     @media (min-width: 640px) {
-      .brand p { font-size: 0.85rem; }
-      .composer-row .primary { flex: 0 0 auto; min-width: 8rem; }
+      .brand p {
+        font-size: 0.82rem;
+        -webkit-line-clamp: 1;
+      }
+      .composer-row .primary {
+        flex: 0 0 auto;
+        min-width: 8.5rem;
+      }
+      .hint { display: block; flex: 1; }
+      .entry:hover {
+        border-color: var(--border-strong);
+        box-shadow: var(--shadow-md);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        transition: none !important;
+        animation: none !important;
+      }
     }
   </style>
 </head>
@@ -406,35 +732,56 @@
   <header class="app-header">
     <div class="wrap header-row">
       <div class="brand">
-        <h1 id="app-title">Liminal Journal</h1>
-        <p id="app-subtitle"></p>
+        <div class="brand-mark" aria-hidden="true">
+          <!-- Threshold / dawn mark: soft horizon -->
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 15.5c2.8-3.2 5.4-4.8 8-4.8s5.2 1.6 8 4.8" />
+            <circle cx="12" cy="9" r="2.1" fill="currentColor" stroke="none" />
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1 id="app-title">Liminal Journal</h1>
+          <p id="app-subtitle"></p>
+        </div>
       </div>
       <div class="header-actions">
-        <button type="button" class="icon ghost" id="btn-theme" aria-label="Theme" title="Theme">◐</button>
+        <button type="button" class="icon ghost" id="btn-theme" aria-label="Theme" title="Theme">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v2M12 19v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M3 12h2M19 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/><circle cx="12" cy="12" r="3.5"/></svg>
+        </button>
         <button type="button" class="icon ghost" id="btn-lang" aria-label="Language" title="Language">EN</button>
-        <button type="button" class="icon ghost" id="btn-menu" aria-label="Menu" title="Menu" aria-haspopup="dialog">⋯</button>
+        <button type="button" class="icon ghost" id="btn-menu" aria-label="Menu" title="Menu" aria-haspopup="dialog">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="6" r="1.2" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="12" cy="18" r="1.2" fill="currentColor" stroke="none"/></svg>
+        </button>
       </div>
     </div>
     <div class="wrap" id="storage-warning" role="status"></div>
   </header>
 
   <div class="wrap day-nav" role="navigation" aria-label="Day">
-    <button type="button" class="icon" id="btn-prev-day" aria-label="Previous day">‹</button>
+    <button type="button" class="icon" id="btn-prev-day" aria-label="Previous day">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 6L8.5 12l6 6"/></svg>
+    </button>
     <label class="sr-only" for="day-picker">Day</label>
     <input type="date" id="day-picker" />
-    <button type="button" class="icon" id="btn-next-day" aria-label="Next day">›</button>
-    <button type="button" class="ghost" id="btn-today" hidden></button>
+    <button type="button" class="icon" id="btn-next-day" aria-label="Next day">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6l6 6-6 6"/></svg>
+    </button>
+    <button type="button" id="btn-today" hidden></button>
   </div>
 
   <main class="wrap" id="log" aria-live="polite"></main>
 
   <div class="composer">
-    <div class="wrap composer-inner">
-      <label class="sr-only" for="composer-text" id="composer-label">Entry</label>
-      <textarea id="composer-text" rows="3" autocomplete="off" enterkeyhint="enter"></textarea>
-      <div class="composer-row">
-        <span class="hint" id="composer-hint"></span>
-        <button type="button" class="primary" id="btn-save"></button>
+    <div class="wrap">
+      <div class="composer-shell">
+        <div class="composer-inner">
+          <label class="sr-only" for="composer-text" id="composer-label">Entry</label>
+          <textarea id="composer-text" rows="3" autocomplete="off" enterkeyhint="enter"></textarea>
+          <div class="composer-row">
+            <span class="hint" id="composer-hint"></span>
+            <button type="button" class="primary" id="btn-save"></button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -700,7 +1047,7 @@
     }
     document.documentElement.setAttribute("data-theme", theme);
     const meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.setAttribute("content", theme === "dark" ? "#161513" : "#f4f2ee");
+    if (meta) meta.setAttribute("content", theme === "dark" ? "#141311" : "#f3efe7");
   }
 
   function applyI18n() {
@@ -808,10 +1155,16 @@
     const list = entriesForDay(selectedDay);
     el.log.innerHTML = "";
     if (!list.length) {
+      const empty = document.createElement("div");
+      empty.className = "empty";
+      empty.innerHTML =
+        '<div class="empty-glyph" aria-hidden="true">' +
+        '<svg viewBox="0 0 24 24"><path d="M5 16c3-3.5 5.5-5 7-5s4 1.5 7 5"/><path d="M8 9h.01M12 7h.01M16 9h.01"/></svg>' +
+        "</div>";
       const p = document.createElement("p");
-      p.className = "empty";
       p.textContent = t("empty");
-      el.log.appendChild(p);
+      empty.appendChild(p);
+      el.log.appendChild(empty);
       return;
     }
     for (const entry of list) {
@@ -824,15 +1177,9 @@
     card.className = "entry" + (editingId === entry.id ? " editing" : "");
     card.dataset.id = entry.id;
 
-    const head = document.createElement("div");
-    head.className = "entry-head";
-
     const time = document.createElement("div");
     time.className = "entry-time";
     time.textContent = formatTime(entry.ts);
-
-    const actions = document.createElement("div");
-    actions.className = "entry-actions";
 
     if (editingId === entry.id) {
       const ta = document.createElement("textarea");
@@ -865,11 +1212,13 @@
       });
 
       editActions.append(cancel, save);
-      head.appendChild(time);
-      card.append(head, ta, editActions);
+      card.append(time, ta, editActions);
       queueMicrotask(() => ta.focus());
       return card;
     }
+
+    const actions = document.createElement("div");
+    actions.className = "entry-actions";
 
     const btnEdit = document.createElement("button");
     btnEdit.type = "button";
@@ -892,13 +1241,12 @@
     });
 
     actions.append(btnEdit, btnDel);
-    head.append(time, actions);
 
     const body = document.createElement("p");
     body.className = "entry-text";
     body.textContent = entry.text;
 
-    card.append(head, body);
+    card.append(time, actions, body);
     return card;
   }
 
