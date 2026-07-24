@@ -95,17 +95,26 @@
       inset: 0;
       z-index: 0;
       pointer-events: none;
-      opacity: var(--room-opacity);
       overflow: hidden;
+    }
+
+    .room-bg::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(90% 60% at 70% 75%, color-mix(in srgb, var(--accent) 7%, transparent), transparent 62%),
+        radial-gradient(70% 50% at 20% 30%, color-mix(in srgb, var(--bg-soft) 70%, transparent), transparent 55%);
     }
 
     .room-bg svg {
       position: absolute;
-      width: min(120vw, 52rem);
+      width: min(132vw, 46rem);
       height: auto;
-      right: -8%;
-      bottom: 18%;
-      transform: translateY(8%);
+      left: 50%;
+      bottom: max(7rem, 18vh);
+      transform: translateX(-42%);
+      opacity: var(--room-opacity);
     }
 
     .app {
@@ -360,8 +369,12 @@
     /* Log */
     main#log {
       position: relative;
-      padding: 0.55rem 0 13.75rem;
+      padding: 0.55rem 0 14.5rem;
       min-height: 42vh;
+    }
+
+    .entry:last-child {
+      scroll-margin-bottom: 15rem;
     }
 
     .empty {
@@ -803,9 +816,10 @@
       }
       .hint { display: block; }
       .room-bg svg {
-        right: 0;
-        bottom: 12%;
-        width: min(70vw, 42rem);
+        width: min(78vw, 40rem);
+        left: 52%;
+        bottom: max(8rem, 16vh);
+        transform: translateX(-40%);
       }
     }
 
@@ -820,41 +834,46 @@
 <body>
   <!-- Ambient isometric corner: left wall vertical lines, right wall horizontal -->
   <div class="room-bg" aria-hidden="true">
-    <svg viewBox="0 0 640 480" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- floor -->
-      <path d="M320 250 L80 390 L320 460 L560 390 Z" fill="currentColor" opacity="0.04" style="color: var(--fg)"/>
-      <!-- left wall (vertical grid) -->
-      <path d="M80 90 L320 30 L320 250 L80 390 Z" fill="currentColor" opacity="0.03" style="color: var(--accent)"/>
-      <g stroke="currentColor" style="color: var(--grid)" stroke-width="1.2" opacity="0.95">
-        <path d="M110 108 L110 362"/>
-        <path d="M140 96 L140 340"/>
-        <path d="M170 84 L170 318"/>
-        <path d="M200 72 L200 296"/>
-        <path d="M230 60 L230 274"/>
-        <path d="M260 48 L260 252"/>
-        <path d="M290 36 L290 242"/>
-        <path d="M80 90 L320 30"/>
-        <path d="M80 390 L320 250"/>
-        <path d="M80 90 L80 390"/>
-        <path d="M320 30 L320 250"/>
+    <svg viewBox="0 0 800 560" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- soft wall fills -->
+      <path d="M120 120 L400 48 L400 300 L120 420 Z" fill="var(--accent)" opacity="0.045"/>
+      <path d="M400 48 L680 120 L680 420 L400 300 Z" fill="var(--accent)" opacity="0.03"/>
+      <path d="M120 420 L400 300 L680 420 L400 500 Z" fill="var(--fg)" opacity="0.035"/>
+
+      <!-- left wall outline + vertical ribs -->
+      <g stroke="var(--grid)" stroke-width="1.15" stroke-linecap="round">
+        <path d="M120 120 L400 48 L400 300 L120 420 Z"/>
+        <path d="M155 132 L155 398"/>
+        <path d="M190 118 L190 378"/>
+        <path d="M225 104 L225 358"/>
+        <path d="M260 90 L260 338"/>
+        <path d="M295 76 L295 318"/>
+        <path d="M330 62 L330 308"/>
+        <path d="M365 54 L365 304"/>
       </g>
-      <!-- right wall (horizontal grid) -->
-      <path d="M320 30 L560 90 L560 390 L320 250 Z" fill="currentColor" opacity="0.025" style="color: var(--accent)"/>
-      <g stroke="currentColor" style="color: var(--grid)" stroke-width="1.2" opacity="0.95">
-        <path d="M320 55 L548 110"/>
-        <path d="M320 80 L548 140"/>
-        <path d="M320 105 L548 170"/>
-        <path d="M320 130 L548 200"/>
-        <path d="M320 155 L548 230"/>
-        <path d="M320 180 L548 260"/>
-        <path d="M320 205 L548 290"/>
-        <path d="M320 230 L548 320"/>
-        <path d="M320 30 L560 90"/>
-        <path d="M320 250 L560 390"/>
-        <path d="M560 90 L560 390"/>
+
+      <!-- right wall outline + horizontal ribs -->
+      <g stroke="var(--grid)" stroke-width="1.15" stroke-linecap="round">
+        <path d="M400 48 L680 120 L680 420 L400 300 Z"/>
+        <path d="M400 78 L668 144"/>
+        <path d="M400 108 L668 174"/>
+        <path d="M400 138 L668 204"/>
+        <path d="M400 168 L668 234"/>
+        <path d="M400 198 L668 264"/>
+        <path d="M400 228 L668 294"/>
+        <path d="M400 258 L668 324"/>
+        <path d="M400 288 L660 350"/>
       </g>
-      <!-- corner seam -->
-      <path d="M320 30 L320 250" stroke="currentColor" style="color: var(--accent)" stroke-width="1.6" opacity="0.35"/>
+
+      <!-- floor edges -->
+      <g stroke="var(--grid)" stroke-width="1.15" stroke-linecap="round">
+        <path d="M120 420 L400 300 L680 420"/>
+        <path d="M400 300 L400 500"/>
+        <path d="M220 450 L400 500 L580 450" opacity="0.55"/>
+      </g>
+
+      <!-- liminal corner seam -->
+      <path d="M400 48 L400 300" stroke="var(--accent)" stroke-width="1.75" opacity="0.42" stroke-linecap="round"/>
     </svg>
   </div>
 
@@ -1005,7 +1024,7 @@
       subtitle: "What are you doing right now? Keep the next step tiny.",
       placeholder: "e.g. Opened the project folder",
       save: "Save",
-      empty: "This corner is quiet. Write a micro-step and tap Save.",
+      empty: "This corner is quiet. The writing space below is ready — a micro-step is enough.",
       download: "Download backup",
       restore: "Restore backup",
       shareDay: "Share this day",
@@ -1053,7 +1072,7 @@
       subtitle: "Cosa stai facendo adesso? Il prossimo passo, piccolissimo.",
       placeholder: "es. Ho aperto la cartella del progetto",
       save: "Salva",
-      empty: "Questo angolo è quieto. Scrivi un micro-passo e tocca Salva.",
+      empty: "Questo angolo è quieto. Lo spazio per scrivere è già pronto sotto — basta un micro-passo.",
       download: "Scarica backup",
       restore: "Ripristina backup",
       shareDay: "Condividi questo giorno",
@@ -1350,9 +1369,26 @@
   }
 
   function entriesForDay(dayKey) {
+    // Insertion / chronological order: oldest first, newest at the bottom.
     return state.entries
       .filter((e) => entryDayKey(e) === dayKey)
-      .sort((a, b) => (a.ts < b.ts ? 1 : a.ts > b.ts ? -1 : 0));
+      .sort((a, b) => (a.ts < b.ts ? -1 : a.ts > b.ts ? 1 : 0));
+  }
+
+  function scrollToLatestEntry() {
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const behavior = reduce ? "auto" : "smooth";
+    requestAnimationFrame(() => {
+      const last = el.log.lastElementChild;
+      if (last && last.classList.contains("entry")) {
+        last.scrollIntoView({ behavior: behavior, block: "end" });
+      } else {
+        window.scrollTo({
+          top: document.documentElement.scrollHeight,
+          behavior: behavior,
+        });
+      }
+    });
   }
 
   function daysWithEntries() {
@@ -1381,12 +1417,17 @@
   function emptyRoomSvg() {
     return (
       '<svg class="empty-room" viewBox="0 0 240 160" fill="none" aria-hidden="true">' +
-      '<path d="M120 70 L40 110 L120 140 L200 110 Z" fill="currentColor" opacity="0.04" style="color:var(--fg)"/>' +
-      '<path d="M40 40 L120 18 L120 70 L40 110 Z" stroke="currentColor" style="color:var(--grid)" stroke-width="1.2"/>' +
-      '<path d="M60 46 L60 100 M80 38 L80 92 M100 30 L100 84" stroke="currentColor" style="color:var(--grid)" stroke-width="1.1"/>' +
-      '<path d="M120 18 L200 40 L200 110 L120 70 Z" stroke="currentColor" style="color:var(--grid)" stroke-width="1.2"/>' +
-      '<path d="M120 32 L192 50 M120 46 L192 64 M120 60 L192 78" stroke="currentColor" style="color:var(--grid)" stroke-width="1.1"/>' +
-      '<path d="M120 18 L120 70" stroke="currentColor" style="color:var(--accent)" stroke-width="1.5" opacity="0.5"/>' +
+      '<path d="M36 42 L120 20 L120 88 L36 122 Z" fill="var(--accent)" opacity="0.05"/>' +
+      '<path d="M120 20 L204 42 L204 122 L120 88 Z" fill="var(--accent)" opacity="0.035"/>' +
+      '<path d="M36 122 L120 88 L204 122 L120 148 Z" fill="var(--fg)" opacity="0.04"/>' +
+      '<g stroke="var(--grid)" stroke-width="1.15" stroke-linecap="round">' +
+      '<path d="M36 42 L120 20 L120 88 L36 122 Z"/>' +
+      '<path d="M58 48 L58 112 M80 40 L80 104 M100 32 L100 96"/>' +
+      '<path d="M120 20 L204 42 L204 122 L120 88 Z"/>' +
+      '<path d="M120 36 L196 54 M120 52 L196 70 M120 68 L196 86"/>' +
+      '<path d="M36 122 L120 88 L204 122"/>' +
+      "</g>" +
+      '<path d="M120 20 L120 88" stroke="var(--accent)" stroke-width="1.5" opacity="0.45" stroke-linecap="round"/>' +
       "</svg>"
     );
   }
@@ -1526,6 +1567,7 @@
     el.composer.value = "";
     openEntryId = null;
     renderLog();
+    scrollToLatestEntry();
     toast(t("saved"));
   }
 
@@ -1568,7 +1610,7 @@
   }
 
   function dayPlainText(dayKey) {
-    const list = entriesForDay(dayKey).slice().reverse();
+    const list = entriesForDay(dayKey); // already chronological
     const lines = list.map((e) => formatTime(e.ts) + " — " + e.text);
     return "Liminal Journal — " + dayKey + "\n\n" + (lines.length ? lines.join("\n\n") : "");
   }
