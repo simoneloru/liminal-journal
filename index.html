@@ -930,6 +930,48 @@
       padding: 0 1.1rem 1.1rem;
     }
 
+    .help-body {
+      max-height: min(60vh, 28rem);
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-right: 0.15rem;
+    }
+
+    .help-body h3 {
+      margin: 1rem 0 0.35rem;
+      font-family: var(--font-ui);
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      color: var(--fg-muted);
+    }
+
+    .help-body h3:first-child {
+      margin-top: 0.25rem;
+    }
+
+    .help-body p,
+    .help-body li {
+      margin: 0 0 0.45rem;
+      font-size: 0.92rem;
+      line-height: 1.45;
+      color: var(--fg);
+    }
+
+    .help-body ul {
+      margin: 0 0 0.35rem;
+      padding-left: 1.15rem;
+    }
+
+    .help-body li {
+      margin-bottom: 0.3rem;
+    }
+
+    .help-body a {
+      color: var(--accent);
+    }
+
     .menu-list {
       display: grid;
       gap: 0.35rem;
@@ -1282,6 +1324,7 @@
         <button type="button" class="secondary" id="btn-lang">
           <span class="row-meta"><span id="lang-label"></span><span id="lang-value"></span></span>
         </button>
+        <button type="button" class="secondary" id="btn-help"></button>
         <div class="menu-sep" role="separator"></div>
         <button type="button" class="secondary" id="btn-download"></button>
         <button type="button" class="secondary" id="btn-restore"></button>
@@ -1298,6 +1341,16 @@
     </div>
     <div class="dialog-actions">
       <button type="button" class="ghost" id="btn-menu-close"></button>
+    </div>
+  </dialog>
+
+  <dialog id="help-dialog">
+    <div class="dialog-body">
+      <h2 id="help-title"></h2>
+      <div class="help-body" id="help-body"></div>
+    </div>
+    <div class="dialog-actions">
+      <button type="button" class="primary" id="btn-help-close"></button>
     </div>
   </dialog>
 
@@ -1459,6 +1512,21 @@
       inspiredBy: "Inspired by interstitial journaling for ADHD.",
       inspirationLink: "Watch: Novie by the Sea (YouTube)",
       dataPrivacyNote: "Notes stay on this device. We never upload them to a Liminal server.",
+      help: "Help",
+      helpTitle: "How Liminal Journal works",
+      helpWhatTitle: "What is this?",
+      helpWhat:
+        "A tiny tool for interstitial journaling: log what you are doing now and the next micro-step — not a to-do list, not a long diary.",
+      helpHowTitle: "How to use it",
+      helpHow1: "Type a short step and press Enter (or Save).",
+      helpHow2: "Expand for longer notes without seeing the log (focus mode).",
+      helpHow3: "Hide the writer to read the day; tap + when you want to write again.",
+      helpHow4: "Tap the date to open the full month calendar.",
+      helpDataTitle: "Your data",
+      helpData:
+        "Everything stays in this browser. Use “Save a safety copy” (share to Files / iCloud / Drive) so you don’t lose notes if the browser is cleared.",
+      helpMoreTitle: "Learn more",
+      helpClose: "Got it",
     },
     it: {
       title: "Liminal Journal",
@@ -1531,6 +1599,21 @@
       inspiredBy: "Ispirato all’interstitial journaling per l’ADHD.",
       inspirationLink: "Guarda: Novie by the Sea (YouTube)",
       dataPrivacyNote: "Le note restano su questo dispositivo. Non le carichiamo su un server di Liminal.",
+      help: "Aiuto",
+      helpTitle: "Come funziona Liminal Journal",
+      helpWhatTitle: "Cos’è?",
+      helpWhat:
+        "Uno strumento minimo per l’interstitial journaling: annoti cosa stai facendo adesso e il prossimo micro-passo — non è una to-do list né un diario lungo.",
+      helpHowTitle: "Come si usa",
+      helpHow1: "Scrivi un passo breve e premi Invio (o Salva).",
+      helpHow2: "Espandi per note più lunghe senza vedere il log (modalità focus).",
+      helpHow3: "Nascondi la scrittura per solo leggere; tocca + per scrivere di nuovo.",
+      helpHow4: "Tocca la data per aprire il calendario del mese.",
+      helpDataTitle: "I tuoi dati",
+      helpData:
+        "Tutto resta in questo browser. Usa “Salva una copia di sicurezza” (condividi su File / iCloud / Drive) così non perdi le note se il browser viene azzerato.",
+      helpMoreTitle: "Per approfondire",
+      helpClose: "Ho capito",
     },
   };
 
@@ -1578,6 +1661,11 @@
     btnMenu: document.getElementById("btn-menu"),
     menuDialog: document.getElementById("menu-dialog"),
     menuTitle: document.getElementById("menu-title"),
+    btnHelp: document.getElementById("btn-help"),
+    helpDialog: document.getElementById("help-dialog"),
+    helpTitle: document.getElementById("help-title"),
+    helpBody: document.getElementById("help-body"),
+    btnHelpClose: document.getElementById("btn-help-close"),
     btnDownload: document.getElementById("btn-download"),
     btnRestore: document.getElementById("btn-restore"),
     btnShareDay: document.getElementById("btn-share-day"),
@@ -1722,6 +1810,52 @@
     updateBackupReminder();
   }
 
+  function renderHelpBody() {
+    if (!el.helpBody) return;
+    const videoUrl = "https://www.youtube.com/watch?v=UFidZJhxz84";
+    el.helpBody.innerHTML =
+      "<h3>" +
+      escapeHtml(t("helpWhatTitle")) +
+      "</h3><p>" +
+      escapeHtml(t("helpWhat")) +
+      "</p><h3>" +
+      escapeHtml(t("helpHowTitle")) +
+      "</h3><ul><li>" +
+      escapeHtml(t("helpHow1")) +
+      "</li><li>" +
+      escapeHtml(t("helpHow2")) +
+      "</li><li>" +
+      escapeHtml(t("helpHow3")) +
+      "</li><li>" +
+      escapeHtml(t("helpHow4")) +
+      "</li></ul><h3>" +
+      escapeHtml(t("helpDataTitle")) +
+      "</h3><p>" +
+      escapeHtml(t("helpData")) +
+      "</p><h3>" +
+      escapeHtml(t("helpMoreTitle")) +
+      '</h3><p><a href="' +
+      videoUrl +
+      '" target="_blank" rel="noopener noreferrer">' +
+      escapeHtml(t("inspirationLink")) +
+      "</a></p>";
+  }
+
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function openHelp() {
+    renderHelpBody();
+    el.helpTitle.textContent = t("helpTitle");
+    el.btnHelpClose.textContent = t("helpClose");
+    el.helpDialog.showModal();
+  }
+
   function applyTheme() {
     const pref = state.settings.theme;
     let theme = pref;
@@ -1756,6 +1890,10 @@
     el.btnShowComposer.setAttribute("aria-label", t("showComposer"));
     el.btnShowComposer.title = t("showComposer");
     el.menuTitle.textContent = t("menu");
+    el.btnHelp.textContent = t("help");
+    el.helpTitle.textContent = t("helpTitle");
+    el.btnHelpClose.textContent = t("helpClose");
+    renderHelpBody();
     el.btnDownload.textContent = t("download");
     el.btnRestore.textContent = t("restore");
     el.btnShareDay.textContent = t("shareDay");
@@ -2541,6 +2679,11 @@
 
     el.btnMenu.addEventListener("click", () => el.menuDialog.showModal());
     el.btnMenuClose.addEventListener("click", () => el.menuDialog.close());
+    el.btnHelp.addEventListener("click", () => {
+      el.menuDialog.close();
+      openHelp();
+    });
+    el.btnHelpClose.addEventListener("click", () => el.helpDialog.close());
     el.btnDownload.addEventListener("click", () => {
       el.menuDialog.close();
       saveSafetyCopy();
