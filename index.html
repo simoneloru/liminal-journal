@@ -4,55 +4,55 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="color-scheme" content="light dark" />
-  <meta name="theme-color" content="#f4f2ee" />
+  <meta name="theme-color" content="#f3efe7" />
   <meta name="description" content="Liminal Journal — a minimal app for interstitial journaling. Log tiny steps, stay in the present." />
   <title>Liminal Journal</title>
   <style>
-    /* Liminal Journal — calm “threshold” UI: warm paper, soft sage, low noise */
+    /* Calm liminal UI: ambient isometric room, low chrome, clear hierarchy */
     :root {
       --bg: #f3efe7;
-      --bg-soft: #ebe5d9;
+      --bg-soft: #e9e3d6;
       --bg-elevated: #fffcf7;
       --fg: #1a1916;
       --fg-muted: #6b675f;
       --fg-faint: #938e84;
-      --border: #e0d9cc;
-      --border-strong: #cfc6b6;
+      --border: #ddd5c6;
+      --border-strong: #c9bfad;
       --accent: #3d5c4a;
-      --accent-soft: #e7f0ea;
+      --accent-soft: #e4efe8;
       --accent-fg: #f7faf8;
       --danger: #9a4034;
       --danger-soft: #f7ebe8;
       --warn-bg: #f4ead0;
       --warn-fg: #5c4a1f;
-      --shadow-sm: 0 1px 2px rgb(40 32 18 / 4%);
-      --shadow-md: 0 4px 16px rgb(40 32 18 / 6%), 0 1px 3px rgb(40 32 18 / 4%);
-      --shadow-lg: 0 18px 50px rgb(20 16 10 / 16%);
+      --grid: color-mix(in srgb, var(--accent) 14%, var(--border));
+      --shadow-sm: 0 1px 2px rgb(40 32 18 / 5%);
+      --shadow-md: 0 8px 28px rgb(40 32 18 / 8%), 0 1px 3px rgb(40 32 18 / 5%);
+      --shadow-lg: 0 22px 56px rgb(20 16 10 / 18%);
       --radius: 14px;
-      --radius-sm: 10px;
+      --radius-sm: 11px;
       --radius-pill: 999px;
-      --font: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua",
-        "Segoe UI", system-ui, -apple-system, sans-serif;
+      --font: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
       --font-ui: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
       --mono: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
       --tap: 44px;
       --safe-b: env(safe-area-inset-bottom, 0px);
       --safe-t: env(safe-area-inset-top, 0px);
       --max: 36rem;
-      --header-h: 3.75rem;
       --ease: cubic-bezier(0.22, 1, 0.36, 1);
-      --focus: 0 0 0 3px color-mix(in srgb, var(--accent) 35%, transparent);
+      --focus: 0 0 0 3px color-mix(in srgb, var(--accent) 32%, transparent);
+      --room-opacity: 0.42;
     }
 
     html[data-theme="dark"] {
       --bg: #141311;
-      --bg-soft: #1a1916;
-      --bg-elevated: #1e1c19;
+      --bg-soft: #1b1916;
+      --bg-elevated: #1f1d1a;
       --fg: #f0ebe3;
       --fg-muted: #a39e94;
       --fg-faint: #736e65;
       --border: #2e2b26;
-      --border-strong: #403c35;
+      --border-strong: #433f37;
       --accent: #8fbc9f;
       --accent-soft: #243029;
       --accent-fg: #0f1612;
@@ -60,9 +60,11 @@
       --danger-soft: #2c1c19;
       --warn-bg: #2c2618;
       --warn-fg: #e8d7a4;
+      --grid: color-mix(in srgb, var(--accent) 18%, var(--border));
       --shadow-sm: 0 1px 2px rgb(0 0 0 / 28%);
-      --shadow-md: 0 6px 20px rgb(0 0 0 / 28%), 0 1px 3px rgb(0 0 0 / 22%);
-      --shadow-lg: 0 22px 56px rgb(0 0 0 / 45%);
+      --shadow-md: 0 10px 28px rgb(0 0 0 / 32%);
+      --shadow-lg: 0 24px 60px rgb(0 0 0 / 48%);
+      --room-opacity: 0.34;
     }
 
     *, *::before, *::after { box-sizing: border-box; }
@@ -84,11 +86,33 @@
       -webkit-text-size-adjust: 100%;
       padding-top: var(--safe-t);
       padding-bottom: calc(var(--safe-b) + 0.25rem);
-      background:
-        radial-gradient(120% 70% at 50% -10%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 55%),
-        radial-gradient(80% 50% at 100% 20%, color-mix(in srgb, var(--bg-soft) 80%, transparent), transparent 50%),
-        var(--bg);
-      background-attachment: fixed;
+      background: var(--bg);
+    }
+
+    /* Ambient isometric room corner (left wall vertical, right wall horizontal) */
+    .room-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      opacity: var(--room-opacity);
+      overflow: hidden;
+    }
+
+    .room-bg svg {
+      position: absolute;
+      width: min(120vw, 52rem);
+      height: auto;
+      right: -8%;
+      bottom: 18%;
+      transform: translateY(8%);
+    }
+
+    .app {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      min-height: 100dvh;
     }
 
     button, input, textarea {
@@ -102,17 +126,18 @@
       background: var(--bg-elevated);
       border-radius: var(--radius-sm);
       min-height: var(--tap);
-      padding: 0.55rem 0.95rem;
+      padding: 0.6rem 1rem;
       box-shadow: var(--shadow-sm);
       transition: background 0.15s var(--ease), border-color 0.15s var(--ease),
-        transform 0.12s var(--ease), box-shadow 0.15s var(--ease);
+        transform 0.12s var(--ease), box-shadow 0.15s var(--ease), color 0.15s var(--ease);
       -webkit-tap-highlight-color: transparent;
+      font-weight: 500;
     }
 
     @media (hover: hover) and (pointer: fine) {
       button:hover {
         border-color: var(--border-strong);
-        background: color-mix(in srgb, var(--bg-elevated) 88%, var(--bg-soft));
+        background: color-mix(in srgb, var(--bg-elevated) 86%, var(--bg-soft));
       }
     }
 
@@ -120,7 +145,8 @@
 
     button:focus-visible,
     input:focus-visible,
-    textarea:focus-visible {
+    textarea:focus-visible,
+    .day-label:focus-visible {
       outline: none;
       box-shadow: var(--focus);
     }
@@ -131,12 +157,12 @@
       border-color: transparent;
       font-weight: 600;
       letter-spacing: 0.01em;
-      box-shadow: 0 1px 0 color-mix(in srgb, #000 12%, transparent), var(--shadow-sm);
+      box-shadow: 0 1px 0 color-mix(in srgb, #000 10%, transparent), var(--shadow-sm);
     }
 
     @media (hover: hover) and (pointer: fine) {
       button.primary:hover {
-        background: color-mix(in srgb, var(--accent) 92%, #000);
+        background: color-mix(in srgb, var(--accent) 90%, #000);
         border-color: transparent;
       }
     }
@@ -145,11 +171,13 @@
       background: transparent;
       box-shadow: none;
       border-color: transparent;
+      color: var(--fg-muted);
     }
 
     @media (hover: hover) and (pointer: fine) {
       button.ghost:hover {
         background: color-mix(in srgb, var(--fg) 6%, transparent);
+        color: var(--fg);
         border-color: transparent;
       }
     }
@@ -157,7 +185,14 @@
     button.danger {
       color: var(--danger);
       background: var(--danger-soft);
-      border-color: color-mix(in srgb, var(--danger) 22%, var(--border));
+      border-color: color-mix(in srgb, var(--danger) 20%, var(--border));
+      box-shadow: none;
+    }
+
+    button.secondary {
+      background: var(--bg-elevated);
+      border-color: var(--border-strong);
+      color: var(--fg);
       box-shadow: none;
     }
 
@@ -167,15 +202,13 @@
       padding: 0;
       display: inline-grid;
       place-items: center;
-      font-size: 1.05rem;
-      line-height: 1;
       color: var(--fg-muted);
-      border-radius: var(--radius-sm);
     }
 
-    button.icon svg {
-      width: 1.15rem;
-      height: 1.15rem;
+    button.icon svg,
+    .day-label svg {
+      width: 1.2rem;
+      height: 1.2rem;
       stroke: currentColor;
       fill: none;
       stroke-width: 1.75;
@@ -188,16 +221,16 @@
       margin-inline: auto;
     }
 
-    /* —— Header —— */
+    /* Header: brand + single hamburger */
     header.app-header {
       position: sticky;
       top: 0;
       z-index: 20;
-      padding: 0.7rem 0 0.65rem;
-      background: color-mix(in srgb, var(--bg) 78%, transparent);
-      backdrop-filter: saturate(1.2) blur(14px);
-      -webkit-backdrop-filter: saturate(1.2) blur(14px);
-      border-bottom: 1px solid color-mix(in srgb, var(--border) 85%, transparent);
+      padding: 0.75rem 0 0.65rem;
+      background: color-mix(in srgb, var(--bg) 82%, transparent);
+      backdrop-filter: saturate(1.15) blur(14px);
+      -webkit-backdrop-filter: saturate(1.15) blur(14px);
+      border-bottom: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
     }
 
     .header-row {
@@ -216,26 +249,20 @@
 
     .brand-mark {
       flex: 0 0 auto;
-      width: 2.25rem;
-      height: 2.25rem;
-      border-radius: 11px;
+      width: 2.35rem;
+      height: 2.35rem;
+      border-radius: 12px;
       display: grid;
       place-items: center;
-      background:
-        linear-gradient(145deg, color-mix(in srgb, var(--accent) 18%, var(--bg-elevated)), var(--bg-elevated));
-      border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--border));
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
       box-shadow: var(--shadow-sm);
       color: var(--accent);
     }
 
     .brand-mark svg {
-      width: 1.15rem;
-      height: 1.15rem;
-      stroke: currentColor;
-      fill: none;
-      stroke-width: 1.7;
-      stroke-linecap: round;
-      stroke-linejoin: round;
+      width: 1.25rem;
+      height: 1.25rem;
     }
 
     .brand-text { min-width: 0; }
@@ -250,8 +277,7 @@
     }
 
     .brand p {
-      margin: 0.18rem 0 0;
-      font-family: var(--font-ui);
+      margin: 0.15rem 0 0;
       font-size: 0.78rem;
       line-height: 1.3;
       color: var(--fg-muted);
@@ -261,29 +287,12 @@
       overflow: hidden;
     }
 
-    .header-actions {
-      display: flex;
-      gap: 0.2rem;
-      align-items: center;
-      flex: 0 0 auto;
-      padding: 0.15rem;
+    #btn-menu {
       border-radius: 12px;
-      background: color-mix(in srgb, var(--bg-elevated) 70%, transparent);
-      border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
-    }
-
-    .header-actions .icon {
-      min-height: 2.4rem;
-      width: 2.4rem;
-      min-width: 2.4rem;
-    }
-
-    #btn-lang {
-      font-family: var(--font-ui);
-      font-size: 0.72rem;
-      font-weight: 700;
-      letter-spacing: 0.04em;
+      border: 1px solid var(--border);
+      background: var(--bg-elevated);
       color: var(--fg);
+      box-shadow: var(--shadow-sm);
     }
 
     #storage-warning {
@@ -295,97 +304,83 @@
       color: var(--warn-fg);
       border: 1px solid color-mix(in srgb, var(--warn-fg) 18%, transparent);
       font-size: 0.86rem;
-      line-height: 1.4;
     }
 
     #storage-warning.visible { display: block; }
 
-    /* —— Day nav —— */
-    .day-nav {
-      display: flex;
+    /* Day bar: prev | open month calendar | next */
+    .day-bar {
+      display: grid;
+      grid-template-columns: var(--tap) 1fr var(--tap);
+      gap: 0.35rem;
       align-items: center;
-      gap: 0.4rem;
-      margin: 1rem auto 0.35rem;
-      padding: 0.3rem;
-      border-radius: 16px;
-      background: color-mix(in srgb, var(--bg-elevated) 88%, transparent);
+      margin: 0.95rem auto 0.45rem;
+    }
+
+    .day-bar .icon {
       border: 1px solid var(--border);
+      background: color-mix(in srgb, var(--bg-elevated) 90%, transparent);
+      color: var(--fg);
       box-shadow: var(--shadow-sm);
     }
 
-    .day-nav .icon {
-      border: none;
-      box-shadow: none;
-      background: transparent;
-      color: var(--fg);
-    }
-
-    .day-nav input[type="date"] {
-      flex: 1;
-      min-width: 0;
-      min-height: 2.5rem;
-      border: none;
+    .day-label {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+      min-height: var(--tap);
+      width: 100%;
+      padding: 0.45rem 0.75rem;
       border-radius: var(--radius-sm);
-      background: transparent;
-      padding: 0.35rem 0.4rem;
-      font-family: var(--font-ui);
-      font-size: 0.95rem;
-      font-weight: 500;
-      font-variant-numeric: tabular-nums;
-      color: var(--fg);
-      box-shadow: none;
-    }
-
-    .day-nav input[type="date"]:focus-visible {
-      background: color-mix(in srgb, var(--accent) 8%, transparent);
-    }
-
-    #btn-today {
-      flex: 0 0 auto;
-      min-height: 2.35rem;
-      padding: 0.35rem 0.7rem;
-      font-size: 0.8rem;
+      border: 1px solid var(--border);
+      background: color-mix(in srgb, var(--bg-elevated) 92%, transparent);
+      box-shadow: var(--shadow-sm);
       font-weight: 600;
-      border-radius: var(--radius-pill);
-      border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border));
-      background: var(--accent-soft);
-      color: var(--accent);
-      box-shadow: none;
+      font-size: 0.95rem;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.01em;
+      color: var(--fg);
+      cursor: pointer;
     }
 
-    /* —— Log —— */
+    .day-label .chev {
+      color: var(--fg-faint);
+      flex: 0 0 auto;
+    }
+
+    .day-label .is-today-dot {
+      width: 0.4rem;
+      height: 0.4rem;
+      border-radius: 50%;
+      background: var(--accent);
+      flex: 0 0 auto;
+    }
+
+    /* Log */
     main#log {
-      padding: 0.65rem 0 13.5rem;
+      position: relative;
+      padding: 0.55rem 0 13.75rem;
       min-height: 42vh;
     }
 
     .empty {
-      margin: 2.75rem auto 1.5rem;
-      max-width: 18rem;
+      margin: 2.5rem auto 1.25rem;
+      max-width: 19rem;
       text-align: center;
-      color: var(--fg-muted);
-      padding: 1.5rem 1rem;
+      padding: 1.25rem 1rem 1.5rem;
     }
 
-    .empty-glyph {
-      width: 3.25rem;
-      height: 3.25rem;
-      margin: 0 auto 1rem;
-      border-radius: 50%;
-      border: 1px dashed color-mix(in srgb, var(--accent) 40%, var(--border));
-      display: grid;
-      place-items: center;
-      color: var(--accent);
-      opacity: 0.85;
+    .empty-room {
+      width: min(100%, 14rem);
+      margin: 0 auto 1.1rem;
+      opacity: 0.9;
     }
 
-    .empty-glyph svg {
-      width: 1.35rem;
-      height: 1.35rem;
-      stroke: currentColor;
-      fill: none;
-      stroke-width: 1.6;
-      stroke-linecap: round;
+    .empty-room svg {
+      width: 100%;
+      height: auto;
+      display: block;
     }
 
     .empty p {
@@ -397,62 +392,52 @@
 
     .entry {
       position: relative;
-      display: grid;
-      grid-template-columns: auto 1fr;
-      gap: 0.65rem 0.85rem;
-      background: var(--bg-elevated);
+      background: color-mix(in srgb, var(--bg-elevated) 94%, transparent);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 0.95rem 0.95rem 0.95rem 0.9rem;
-      margin: 0 0 0.7rem;
+      padding: 0.9rem 0.95rem 0.95rem;
+      margin: 0 0 0.65rem;
       box-shadow: var(--shadow-sm);
-      transition: border-color 0.15s var(--ease), box-shadow 0.15s var(--ease);
+      backdrop-filter: blur(6px);
     }
 
     .entry::before {
       content: "";
       position: absolute;
       left: 0;
-      top: 0.85rem;
-      bottom: 0.85rem;
+      top: 0.8rem;
+      bottom: 0.8rem;
       width: 3px;
       border-radius: 0 3px 3px 0;
-      background: color-mix(in srgb, var(--accent) 55%, var(--border));
-      opacity: 0.75;
+      background: color-mix(in srgb, var(--accent) 50%, var(--border));
+    }
+
+    .entry-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      margin-bottom: 0.4rem;
     }
 
     .entry-time {
-      grid-column: 1;
-      grid-row: 1;
-      align-self: start;
-      margin-top: 0.12rem;
       font-family: var(--mono);
-      font-size: 0.78rem;
+      font-size: 0.76rem;
       font-weight: 500;
       letter-spacing: 0.02em;
       color: var(--fg-muted);
       font-variant-numeric: tabular-nums;
-      background: color-mix(in srgb, var(--bg-soft) 70%, var(--bg-elevated));
+      background: color-mix(in srgb, var(--bg-soft) 65%, transparent);
       border: 1px solid color-mix(in srgb, var(--border) 90%, transparent);
       border-radius: var(--radius-pill);
-      padding: 0.22rem 0.55rem;
-      line-height: 1.2;
-    }
-
-    .entry-actions {
-      grid-column: 2;
-      grid-row: 1;
-      display: flex;
-      gap: 0.15rem;
-      justify-content: flex-end;
-      align-items: center;
-    }
-
-    .entry-actions button {
-      min-height: 2rem;
       padding: 0.2rem 0.55rem;
-      font-size: 0.78rem;
-      font-weight: 500;
+    }
+
+    .entry-more {
+      min-height: 2rem;
+      width: 2rem;
+      min-width: 2rem;
+      padding: 0;
       border: none;
       box-shadow: none;
       background: transparent;
@@ -461,24 +446,29 @@
     }
 
     @media (hover: hover) and (pointer: fine) {
-      .entry-actions button:hover {
+      .entry-more:hover {
         color: var(--fg);
         background: color-mix(in srgb, var(--fg) 6%, transparent);
       }
-      .entry-actions button.danger:hover {
-        color: var(--danger);
-        background: var(--danger-soft);
-      }
     }
 
-    .entry-actions button.danger {
-      color: var(--fg-faint);
-      background: transparent;
-      border: none;
+    .entry-actions {
+      display: none;
+      gap: 0.4rem;
+      margin-top: 0.65rem;
+      padding-top: 0.65rem;
+      border-top: 1px solid color-mix(in srgb, var(--border) 90%, transparent);
+    }
+
+    .entry.open .entry-actions { display: flex; }
+
+    .entry-actions button {
+      flex: 1;
+      min-height: 2.4rem;
+      font-size: 0.88rem;
     }
 
     .entry-text {
-      grid-column: 1 / -1;
       white-space: pre-wrap;
       word-break: break-word;
       margin: 0;
@@ -486,17 +476,10 @@
       font-size: 1.05rem;
       line-height: 1.48;
       letter-spacing: -0.01em;
-      color: var(--fg);
     }
 
-    .entry.editing {
-      grid-template-columns: 1fr;
-      gap: 0.55rem;
-      border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
-      box-shadow: var(--shadow-md);
-    }
-
-    .entry.editing .entry-time { justify-self: start; }
+    .entry.editing .entry-text { display: none; }
+    .entry.editing .entry-more { display: none; }
 
     .entry.editing textarea {
       width: 100%;
@@ -509,16 +492,17 @@
       font-family: var(--font);
       font-size: 1.05rem;
       line-height: 1.45;
-      box-shadow: inset 0 1px 2px rgb(0 0 0 / 3%);
+      margin-top: 0.25rem;
     }
 
     .entry-edit-actions {
       display: flex;
       gap: 0.45rem;
+      margin-top: 0.6rem;
       justify-content: flex-end;
     }
 
-    /* —— Composer dock —— */
+    /* Composer */
     .composer {
       position: fixed;
       left: 0;
@@ -526,8 +510,7 @@
       bottom: 0;
       z-index: 30;
       padding: 0.55rem 0 calc(0.55rem + var(--safe-b));
-      background:
-        linear-gradient(to top, color-mix(in srgb, var(--bg) 96%, transparent) 55%, transparent);
+      background: linear-gradient(to top, color-mix(in srgb, var(--bg) 97%, transparent) 50%, transparent);
       pointer-events: none;
     }
 
@@ -535,33 +518,26 @@
       pointer-events: auto;
       border-radius: 18px;
       border: 1px solid var(--border);
-      background: color-mix(in srgb, var(--bg-elevated) 94%, transparent);
-      backdrop-filter: blur(16px) saturate(1.15);
-      -webkit-backdrop-filter: blur(16px) saturate(1.15);
+      background: color-mix(in srgb, var(--bg-elevated) 96%, transparent);
+      backdrop-filter: blur(16px) saturate(1.1);
+      -webkit-backdrop-filter: blur(16px) saturate(1.1);
       box-shadow: var(--shadow-md);
       padding: 0.7rem 0.75rem 0.75rem;
     }
 
-    .composer-inner {
-      display: grid;
-      gap: 0.55rem;
-    }
-
     #composer-text {
       width: 100%;
-      min-height: 4.75rem;
+      min-height: 4.6rem;
       max-height: 10rem;
       resize: vertical;
       border: 1px solid transparent;
       border-radius: 12px;
-      background: color-mix(in srgb, var(--bg) 55%, var(--bg-elevated));
+      background: color-mix(in srgb, var(--bg) 50%, var(--bg-elevated));
       padding: 0.8rem 0.85rem;
       font-family: var(--font);
       font-size: 1.05rem;
       line-height: 1.45;
-      letter-spacing: -0.01em;
       box-shadow: inset 0 1px 2px rgb(0 0 0 / 3%);
-      transition: border-color 0.15s var(--ease), background 0.15s var(--ease), box-shadow 0.15s var(--ease);
     }
 
     #composer-text::placeholder {
@@ -570,7 +546,7 @@
     }
 
     #composer-text:focus {
-      border-color: color-mix(in srgb, var(--accent) 40%, var(--border));
+      border-color: color-mix(in srgb, var(--accent) 38%, var(--border));
       background: var(--bg-elevated);
       box-shadow: var(--focus);
       outline: none;
@@ -580,30 +556,36 @@
       display: flex;
       gap: 0.55rem;
       align-items: center;
+      margin-top: 0.55rem;
     }
 
     .composer-row .primary {
       flex: 1;
-      min-height: 2.75rem;
+      min-height: 2.8rem;
       border-radius: 12px;
-      font-size: 0.98rem;
     }
 
     .hint {
+      display: none;
       font-size: 0.72rem;
       color: var(--fg-faint);
-      display: none;
+      flex: 1;
     }
 
-    /* —— Dialogs —— */
+    /* Dialogs */
     dialog {
       border: 1px solid var(--border);
       border-radius: 18px;
       background: var(--bg-elevated);
       color: var(--fg);
       padding: 0;
-      width: min(calc(100% - 2rem), 22.5rem);
+      width: min(calc(100% - 1.5rem), 22.5rem);
       box-shadow: var(--shadow-lg);
+      max-height: min(90vh, 40rem);
+    }
+
+    dialog.cal-dialog {
+      width: min(calc(100% - 1.25rem), 24rem);
     }
 
     dialog::backdrop {
@@ -612,22 +594,21 @@
     }
 
     .dialog-body {
-      padding: 1.2rem 1.2rem 0.85rem;
+      padding: 1.15rem 1.15rem 0.75rem;
     }
 
     .dialog-body h2 {
-      margin: 0 0 0.4rem;
+      margin: 0 0 0.35rem;
       font-family: var(--font);
       font-size: 1.12rem;
       font-weight: 600;
       letter-spacing: -0.02em;
     }
 
-    .dialog-body p {
+    .dialog-body > p {
       margin: 0 0 0.65rem;
       color: var(--fg-muted);
       font-size: 0.9rem;
-      line-height: 1.45;
     }
 
     .dialog-actions {
@@ -635,13 +616,13 @@
       flex-wrap: wrap;
       gap: 0.45rem;
       justify-content: flex-end;
-      padding: 0 1.15rem 1.15rem;
+      padding: 0 1.1rem 1.1rem;
     }
 
     .menu-list {
       display: grid;
-      gap: 0.4rem;
-      margin: 0.65rem 0 0;
+      gap: 0.35rem;
+      margin: 0.75rem 0 0;
     }
 
     .menu-list button {
@@ -650,11 +631,31 @@
       justify-content: flex-start;
       border-radius: 12px;
       min-height: 2.85rem;
-      font-weight: 500;
+      padding-inline: 0.95rem;
+    }
+
+    .menu-list .row-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      width: 100%;
+    }
+
+    .menu-list .row-meta span:last-child {
+      color: var(--fg-muted);
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+
+    .menu-sep {
+      height: 1px;
+      background: var(--border);
+      margin: 0.45rem 0.15rem;
     }
 
     .menu-credit {
-      margin: 0.95rem 0 0;
+      margin: 0.9rem 0 0;
       font-size: 0.78rem;
       color: var(--fg-muted);
       line-height: 1.45;
@@ -664,7 +665,95 @@
       color: var(--accent);
       text-decoration: underline;
       text-underline-offset: 2px;
-      text-decoration-thickness: 1px;
+    }
+
+    /* Month calendar */
+    .cal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.4rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .cal-head h2 {
+      margin: 0;
+      flex: 1;
+      text-align: center;
+      font-size: 1rem;
+      font-family: var(--font-ui);
+      font-weight: 650;
+      letter-spacing: -0.01em;
+    }
+
+    .cal-weekdays,
+    .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 0.2rem;
+    }
+
+    .cal-weekdays span {
+      text-align: center;
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--fg-faint);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      padding: 0.25rem 0 0.4rem;
+    }
+
+    .cal-grid button {
+      aspect-ratio: 1;
+      min-height: 0;
+      height: auto;
+      padding: 0;
+      border-radius: 11px;
+      border: 1px solid transparent;
+      background: transparent;
+      box-shadow: none;
+      font-variant-numeric: tabular-nums;
+      font-size: 0.9rem;
+      font-weight: 500;
+      position: relative;
+      color: var(--fg);
+    }
+
+    .cal-grid button.muted {
+      color: var(--fg-faint);
+      opacity: 0.55;
+    }
+
+    .cal-grid button.has-entries::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: 0.28rem;
+      width: 0.28rem;
+      height: 0.28rem;
+      border-radius: 50%;
+      transform: translateX(-50%);
+      background: var(--accent);
+    }
+
+    .cal-grid button.selected {
+      background: var(--accent);
+      color: var(--accent-fg);
+      font-weight: 700;
+    }
+
+    .cal-grid button.selected.has-entries::after {
+      background: var(--accent-fg);
+    }
+
+    .cal-grid button.today:not(.selected) {
+      border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+      .cal-grid button:hover:not(.selected) {
+        background: color-mix(in srgb, var(--accent) 10%, transparent);
+      }
     }
 
     .sr-only {
@@ -681,7 +770,7 @@
     .toast {
       position: fixed;
       left: 50%;
-      bottom: calc(11.25rem + var(--safe-b));
+      bottom: calc(11.4rem + var(--safe-b));
       transform: translateX(-50%) translateY(6px);
       z-index: 40;
       background: color-mix(in srgb, var(--fg) 94%, var(--accent));
@@ -690,7 +779,6 @@
       border-radius: var(--radius-pill);
       font-size: 0.84rem;
       font-weight: 500;
-      letter-spacing: 0.01em;
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.22s var(--ease), transform 0.22s var(--ease);
@@ -713,10 +801,11 @@
         flex: 0 0 auto;
         min-width: 8.5rem;
       }
-      .hint { display: block; flex: 1; }
-      .entry:hover {
-        border-color: var(--border-strong);
-        box-shadow: var(--shadow-md);
+      .hint { display: block; }
+      .room-bg svg {
+        right: 0;
+        bottom: 12%;
+        width: min(70vw, 42rem);
       }
     }
 
@@ -729,53 +818,97 @@
   </style>
 </head>
 <body>
-  <header class="app-header">
-    <div class="wrap header-row">
-      <div class="brand">
-        <div class="brand-mark" aria-hidden="true">
-          <!-- Threshold / dawn mark: soft horizon -->
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M4 15.5c2.8-3.2 5.4-4.8 8-4.8s5.2 1.6 8 4.8" />
-            <circle cx="12" cy="9" r="2.1" fill="currentColor" stroke="none" />
-          </svg>
-        </div>
-        <div class="brand-text">
-          <h1 id="app-title">Liminal Journal</h1>
-          <p id="app-subtitle"></p>
-        </div>
-      </div>
-      <div class="header-actions">
-        <button type="button" class="icon ghost" id="btn-theme" aria-label="Theme" title="Theme">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v2M12 19v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M3 12h2M19 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/><circle cx="12" cy="12" r="3.5"/></svg>
-        </button>
-        <button type="button" class="icon ghost" id="btn-lang" aria-label="Language" title="Language">EN</button>
-        <button type="button" class="icon ghost" id="btn-menu" aria-label="Menu" title="Menu" aria-haspopup="dialog">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="6" r="1.2" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="12" cy="18" r="1.2" fill="currentColor" stroke="none"/></svg>
-        </button>
-      </div>
-    </div>
-    <div class="wrap" id="storage-warning" role="status"></div>
-  </header>
-
-  <div class="wrap day-nav" role="navigation" aria-label="Day">
-    <button type="button" class="icon" id="btn-prev-day" aria-label="Previous day">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 6L8.5 12l6 6"/></svg>
-    </button>
-    <label class="sr-only" for="day-picker">Day</label>
-    <input type="date" id="day-picker" />
-    <button type="button" class="icon" id="btn-next-day" aria-label="Next day">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6l6 6-6 6"/></svg>
-    </button>
-    <button type="button" id="btn-today" hidden></button>
+  <!-- Ambient isometric corner: left wall vertical lines, right wall horizontal -->
+  <div class="room-bg" aria-hidden="true">
+    <svg viewBox="0 0 640 480" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- floor -->
+      <path d="M320 250 L80 390 L320 460 L560 390 Z" fill="currentColor" opacity="0.04" style="color: var(--fg)"/>
+      <!-- left wall (vertical grid) -->
+      <path d="M80 90 L320 30 L320 250 L80 390 Z" fill="currentColor" opacity="0.03" style="color: var(--accent)"/>
+      <g stroke="currentColor" style="color: var(--grid)" stroke-width="1.2" opacity="0.95">
+        <path d="M110 108 L110 362"/>
+        <path d="M140 96 L140 340"/>
+        <path d="M170 84 L170 318"/>
+        <path d="M200 72 L200 296"/>
+        <path d="M230 60 L230 274"/>
+        <path d="M260 48 L260 252"/>
+        <path d="M290 36 L290 242"/>
+        <path d="M80 90 L320 30"/>
+        <path d="M80 390 L320 250"/>
+        <path d="M80 90 L80 390"/>
+        <path d="M320 30 L320 250"/>
+      </g>
+      <!-- right wall (horizontal grid) -->
+      <path d="M320 30 L560 90 L560 390 L320 250 Z" fill="currentColor" opacity="0.025" style="color: var(--accent)"/>
+      <g stroke="currentColor" style="color: var(--grid)" stroke-width="1.2" opacity="0.95">
+        <path d="M320 55 L548 110"/>
+        <path d="M320 80 L548 140"/>
+        <path d="M320 105 L548 170"/>
+        <path d="M320 130 L548 200"/>
+        <path d="M320 155 L548 230"/>
+        <path d="M320 180 L548 260"/>
+        <path d="M320 205 L548 290"/>
+        <path d="M320 230 L548 320"/>
+        <path d="M320 30 L560 90"/>
+        <path d="M320 250 L560 390"/>
+        <path d="M560 90 L560 390"/>
+      </g>
+      <!-- corner seam -->
+      <path d="M320 30 L320 250" stroke="currentColor" style="color: var(--accent)" stroke-width="1.6" opacity="0.35"/>
+    </svg>
   </div>
 
-  <main class="wrap" id="log" aria-live="polite"></main>
+  <div class="app">
+    <header class="app-header">
+      <div class="wrap header-row">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">
+            <!-- Geometric threshold: two planes meeting at a corner -->
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M4 6 L12 3 L12 15 L4 18 Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+              <path d="M12 3 L20 6 L20 18 L12 15 Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+              <path d="M4 18 L12 15 L20 18" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" opacity="0.55"/>
+              <path d="M7 8.2 L7 15.5" stroke="currentColor" stroke-width="1.2" opacity="0.45"/>
+              <path d="M9.5 7.2 L9.5 14.7" stroke="currentColor" stroke-width="1.2" opacity="0.45"/>
+              <path d="M14 7.5 L18.2 9" stroke="currentColor" stroke-width="1.2" opacity="0.45"/>
+              <path d="M14 10 L18.2 11.5" stroke="currentColor" stroke-width="1.2" opacity="0.45"/>
+              <path d="M14 12.5 L18.2 14" stroke="currentColor" stroke-width="1.2" opacity="0.45"/>
+            </svg>
+          </div>
+          <div class="brand-text">
+            <h1 id="app-title">Liminal Journal</h1>
+            <p id="app-subtitle"></p>
+          </div>
+        </div>
+        <button type="button" class="icon" id="btn-menu" aria-label="Menu" aria-haspopup="dialog" title="Menu">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M5 7h14M5 12h14M5 17h14"/>
+          </svg>
+        </button>
+      </div>
+      <div class="wrap" id="storage-warning" role="status"></div>
+    </header>
 
-  <div class="composer">
-    <div class="wrap">
-      <div class="composer-shell">
-        <div class="composer-inner">
-          <label class="sr-only" for="composer-text" id="composer-label">Entry</label>
+    <div class="wrap day-bar" role="navigation" aria-label="Day">
+      <button type="button" class="icon" id="btn-prev-day" aria-label="Previous day">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 6L8.5 12l6 6"/></svg>
+      </button>
+      <button type="button" class="day-label" id="btn-open-cal" aria-haspopup="dialog">
+        <span class="is-today-dot" id="today-dot" hidden></span>
+        <span id="day-label-text"></span>
+        <svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5"/></svg>
+      </button>
+      <button type="button" class="icon" id="btn-next-day" aria-label="Next day">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6l6 6-6 6"/></svg>
+      </button>
+    </div>
+
+    <main class="wrap" id="log" aria-live="polite"></main>
+
+    <div class="composer">
+      <div class="wrap">
+        <div class="composer-shell">
+          <label class="sr-only" for="composer-text">Entry</label>
           <textarea id="composer-text" rows="3" autocomplete="off" enterkeyhint="enter"></textarea>
           <div class="composer-row">
             <span class="hint" id="composer-hint"></span>
@@ -792,9 +925,16 @@
     <div class="dialog-body">
       <h2 id="menu-title"></h2>
       <div class="menu-list">
-        <button type="button" id="btn-download"></button>
-        <button type="button" id="btn-restore"></button>
-        <button type="button" id="btn-share-day"></button>
+        <button type="button" class="secondary" id="btn-theme">
+          <span class="row-meta"><span id="theme-label"></span><span id="theme-value"></span></span>
+        </button>
+        <button type="button" class="secondary" id="btn-lang">
+          <span class="row-meta"><span id="lang-label"></span><span id="lang-value"></span></span>
+        </button>
+        <div class="menu-sep" role="separator"></div>
+        <button type="button" class="secondary" id="btn-download"></button>
+        <button type="button" class="secondary" id="btn-restore"></button>
+        <button type="button" class="secondary" id="btn-share-day"></button>
       </div>
       <p class="menu-credit" id="menu-credit"></p>
       <p class="menu-credit">
@@ -803,6 +943,26 @@
     </div>
     <div class="dialog-actions">
       <button type="button" class="ghost" id="btn-menu-close"></button>
+    </div>
+  </dialog>
+
+  <dialog id="cal-dialog" class="cal-dialog">
+    <div class="dialog-body">
+      <div class="cal-head">
+        <button type="button" class="icon ghost" id="btn-cal-prev" aria-label="Previous month">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 6L8.5 12l6 6"/></svg>
+        </button>
+        <h2 id="cal-month-label"></h2>
+        <button type="button" class="icon ghost" id="btn-cal-next" aria-label="Next month">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.5 6l6 6-6 6"/></svg>
+        </button>
+      </div>
+      <div class="cal-weekdays" id="cal-weekdays"></div>
+      <div class="cal-grid" id="cal-grid" role="grid"></div>
+    </div>
+    <div class="dialog-actions">
+      <button type="button" class="ghost" id="btn-cal-close"></button>
+      <button type="button" class="secondary" id="btn-cal-today"></button>
     </div>
   </dialog>
 
@@ -845,7 +1005,7 @@
       subtitle: "What are you doing right now? Keep the next step tiny.",
       placeholder: "e.g. Opened the project folder",
       save: "Save",
-      empty: "No entries this day. Write a micro-step and tap Save.",
+      empty: "This corner is quiet. Write a micro-step and tap Save.",
       download: "Download backup",
       restore: "Restore backup",
       shareDay: "Share this day",
@@ -858,6 +1018,7 @@
       today: "Today",
       edit: "Edit",
       delete: "Delete",
+      more: "More",
       saveEdit: "Save",
       deleteTitle: "Delete entry?",
       deleteMsg: "This cannot be undone.",
@@ -873,8 +1034,14 @@
       downloaded: "Backup downloaded",
       theme: "Theme",
       lang: "Language",
+      themeSystem: "System",
+      themeLight: "Light",
+      themeDark: "Dark",
       prevDay: "Previous day",
       nextDay: "Next day",
+      openCalendar: "Open calendar",
+      prevMonth: "Previous month",
+      nextMonth: "Next month",
       shortcut: "⌘/Ctrl+Enter to save",
       replaceConfirmTitle: "Replace everything?",
       replaceConfirmMsg: "Your current journal will be replaced by this backup.",
@@ -886,7 +1053,7 @@
       subtitle: "Cosa stai facendo adesso? Il prossimo passo, piccolissimo.",
       placeholder: "es. Ho aperto la cartella del progetto",
       save: "Salva",
-      empty: "Nessuna voce in questo giorno. Scrivi un micro-passo e tocca Salva.",
+      empty: "Questo angolo è quieto. Scrivi un micro-passo e tocca Salva.",
       download: "Scarica backup",
       restore: "Ripristina backup",
       shareDay: "Condividi questo giorno",
@@ -899,6 +1066,7 @@
       today: "Oggi",
       edit: "Modifica",
       delete: "Elimina",
+      more: "Altro",
       saveEdit: "Salva",
       deleteTitle: "Eliminare la voce?",
       deleteMsg: "Questa azione non si può annullare.",
@@ -914,8 +1082,14 @@
       downloaded: "Backup scaricato",
       theme: "Tema",
       lang: "Lingua",
+      themeSystem: "Sistema",
+      themeLight: "Chiaro",
+      themeDark: "Scuro",
       prevDay: "Giorno precedente",
       nextDay: "Giorno successivo",
+      openCalendar: "Apri calendario",
+      prevMonth: "Mese precedente",
+      nextMonth: "Mese successivo",
       shortcut: "⌘/Ctrl+Invio per salvare",
       replaceConfirmTitle: "Sostituire tutto?",
       replaceConfirmMsg: "Il diario attuale verrà sostituito da questo backup.",
@@ -924,28 +1098,34 @@
     },
   };
 
-  /** @type {{version:number, entries: Array<{id:string,ts:string,updatedAt:?string,text:string}>, settings:{theme:string,lang:string}}} */
   let state = defaultState();
   let selectedDay = localDateKey(new Date());
+  let calMonth = new Date(); // first of visible month
   let pendingRestore = null;
   let confirmResolver = null;
   let editingId = null;
+  let openEntryId = null;
   let toastTimer = null;
 
   const el = {
     title: document.getElementById("app-title"),
     subtitle: document.getElementById("app-subtitle"),
     storageWarning: document.getElementById("storage-warning"),
-    dayPicker: document.getElementById("day-picker"),
+    dayLabelText: document.getElementById("day-label-text"),
+    todayDot: document.getElementById("today-dot"),
+    btnOpenCal: document.getElementById("btn-open-cal"),
     btnPrev: document.getElementById("btn-prev-day"),
     btnNext: document.getElementById("btn-next-day"),
-    btnToday: document.getElementById("btn-today"),
     log: document.getElementById("log"),
     composer: document.getElementById("composer-text"),
     composerHint: document.getElementById("composer-hint"),
     btnSave: document.getElementById("btn-save"),
     btnTheme: document.getElementById("btn-theme"),
     btnLang: document.getElementById("btn-lang"),
+    themeLabel: document.getElementById("theme-label"),
+    themeValue: document.getElementById("theme-value"),
+    langLabel: document.getElementById("lang-label"),
+    langValue: document.getElementById("lang-value"),
     btnMenu: document.getElementById("btn-menu"),
     menuDialog: document.getElementById("menu-dialog"),
     menuTitle: document.getElementById("menu-title"),
@@ -955,6 +1135,14 @@
     btnMenuClose: document.getElementById("btn-menu-close"),
     menuCredit: document.getElementById("menu-credit"),
     linkInspiration: document.getElementById("link-inspiration"),
+    calDialog: document.getElementById("cal-dialog"),
+    calMonthLabel: document.getElementById("cal-month-label"),
+    calWeekdays: document.getElementById("cal-weekdays"),
+    calGrid: document.getElementById("cal-grid"),
+    btnCalPrev: document.getElementById("btn-cal-prev"),
+    btnCalNext: document.getElementById("btn-cal-next"),
+    btnCalClose: document.getElementById("btn-cal-close"),
+    btnCalToday: document.getElementById("btn-cal-today"),
     restoreDialog: document.getElementById("restore-dialog"),
     restoreTitle: document.getElementById("restore-title"),
     restoreSummary: document.getElementById("restore-summary"),
@@ -974,10 +1162,7 @@
     return {
       version: 1,
       entries: [],
-      settings: {
-        theme: "system",
-        lang: detectLang(),
-      },
+      settings: { theme: "system", lang: detectLang() },
     };
   }
 
@@ -1002,12 +1187,15 @@
         entries: Array.isArray(data.entries) ? data.entries.filter(validEntry) : [],
         settings: {
           theme: normalizeTheme(data.settings && data.settings.theme),
-          lang: data.settings && data.settings.lang === "it" ? "it" : (data.settings && data.settings.lang === "en" ? "en" : detectLang()),
+          lang:
+            data.settings && data.settings.lang === "it"
+              ? "it"
+              : data.settings && data.settings.lang === "en"
+                ? "en"
+                : detectLang(),
         },
       };
-    } catch (_) {
-      /* keep defaults */
-    }
+    } catch (_) {}
   }
 
   function validEntry(e) {
@@ -1026,15 +1214,12 @@
     });
     try {
       localStorage.setItem(STORAGE_KEY, payload);
-    } catch (_) {
-      /* quota — still keep in-memory; soft warning covers this */
-    }
+    } catch (_) {}
     updateStorageWarning(payload.length);
   }
 
   function updateStorageWarning(bytes) {
-    const n = state.entries.length;
-    const show = bytes >= SOFT_BYTES || n >= SOFT_COUNT;
+    const show = bytes >= SOFT_BYTES || state.entries.length >= SOFT_COUNT;
     el.storageWarning.textContent = t("storageWarn");
     el.storageWarning.classList.toggle("visible", show);
   }
@@ -1048,6 +1233,12 @@
     document.documentElement.setAttribute("data-theme", theme);
     const meta = document.querySelector('meta[name="theme-color"]');
     if (meta) meta.setAttribute("content", theme === "dark" ? "#141311" : "#f3efe7");
+  }
+
+  function themeLabel() {
+    if (state.settings.theme === "light") return t("themeLight");
+    if (state.settings.theme === "dark") return t("themeDark");
+    return t("themeSystem");
   }
 
   function applyI18n() {
@@ -1064,20 +1255,27 @@
     el.btnMenuClose.textContent = t("close");
     el.menuCredit.textContent = t("inspiredBy");
     el.linkInspiration.textContent = t("inspirationLink");
+    el.themeLabel.textContent = t("theme");
+    el.themeValue.textContent = themeLabel();
+    el.langLabel.textContent = t("lang");
+    el.langValue.textContent = state.settings.lang === "it" ? "IT" : "EN";
     el.restoreTitle.textContent = t("restoreTitle");
     el.btnRestoreCancel.textContent = t("cancel");
     el.btnRestoreMerge.textContent = t("merge");
     el.btnRestoreReplace.textContent = t("replace");
-    el.btnToday.textContent = t("today");
-    el.btnTheme.setAttribute("aria-label", t("theme"));
-    el.btnTheme.title = t("theme");
-    el.btnLang.setAttribute("aria-label", t("lang"));
-    el.btnLang.title = t("lang");
-    el.btnLang.textContent = state.settings.lang === "it" ? "IT" : "EN";
+    el.btnCalToday.textContent = t("today");
+    el.btnCalClose.textContent = t("close");
     el.btnPrev.setAttribute("aria-label", t("prevDay"));
     el.btnNext.setAttribute("aria-label", t("nextDay"));
+    el.btnOpenCal.setAttribute("aria-label", t("openCalendar"));
+    el.btnCalPrev.setAttribute("aria-label", t("prevMonth"));
+    el.btnCalNext.setAttribute("aria-label", t("nextMonth"));
     el.btnMenu.setAttribute("aria-label", t("menu"));
+    el.btnMenu.title = t("menu");
     document.title = t("title");
+    updateDayLabel();
+    renderCalWeekdays();
+    if (el.calDialog.open) renderCalendar();
   }
 
   function localDateKey(d) {
@@ -1114,8 +1312,22 @@
     });
   }
 
+  function formatDayLabel(key) {
+    const d = parseLocalDay(key);
+    const loc = state.settings.lang === "it" ? "it-IT" : "en-GB";
+    return d.toLocaleDateString(loc, {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  }
+
   function nowIso() {
-    const d = new Date();
+    return isoFromDate(new Date());
+  }
+
+  function isoFromDate(d) {
     const pad = (n) => String(n).padStart(2, "0");
     const off = -d.getTimezoneOffset();
     const sign = off >= 0 ? "+" : "-";
@@ -1143,12 +1355,40 @@
       .sort((a, b) => (a.ts < b.ts ? 1 : a.ts > b.ts ? -1 : 0));
   }
 
+  function daysWithEntries() {
+    const set = new Set();
+    for (const e of state.entries) {
+      const k = entryDayKey(e);
+      if (k) set.add(k);
+    }
+    return set;
+  }
+
+  function updateDayLabel() {
+    el.dayLabelText.textContent = formatDayLabel(selectedDay);
+    const isToday = selectedDay === localDateKey(new Date());
+    el.todayDot.hidden = !isToday;
+  }
+
   function setSelectedDay(key) {
     selectedDay = key;
-    el.dayPicker.value = key;
-    const today = localDateKey(new Date());
-    el.btnToday.hidden = key === today;
+    openEntryId = null;
+    editingId = null;
+    updateDayLabel();
     renderLog();
+  }
+
+  function emptyRoomSvg() {
+    return (
+      '<svg class="empty-room" viewBox="0 0 240 160" fill="none" aria-hidden="true">' +
+      '<path d="M120 70 L40 110 L120 140 L200 110 Z" fill="currentColor" opacity="0.04" style="color:var(--fg)"/>' +
+      '<path d="M40 40 L120 18 L120 70 L40 110 Z" stroke="currentColor" style="color:var(--grid)" stroke-width="1.2"/>' +
+      '<path d="M60 46 L60 100 M80 38 L80 92 M100 30 L100 84" stroke="currentColor" style="color:var(--grid)" stroke-width="1.1"/>' +
+      '<path d="M120 18 L200 40 L200 110 L120 70 Z" stroke="currentColor" style="color:var(--grid)" stroke-width="1.2"/>' +
+      '<path d="M120 32 L192 50 M120 46 L192 64 M120 60 L192 78" stroke="currentColor" style="color:var(--grid)" stroke-width="1.1"/>' +
+      '<path d="M120 18 L120 70" stroke="currentColor" style="color:var(--accent)" stroke-width="1.5" opacity="0.5"/>' +
+      "</svg>"
+    );
   }
 
   function renderLog() {
@@ -1157,10 +1397,7 @@
     if (!list.length) {
       const empty = document.createElement("div");
       empty.className = "empty";
-      empty.innerHTML =
-        '<div class="empty-glyph" aria-hidden="true">' +
-        '<svg viewBox="0 0 24 24"><path d="M5 16c3-3.5 5.5-5 7-5s4 1.5 7 5"/><path d="M8 9h.01M12 7h.01M16 9h.01"/></svg>' +
-        "</div>";
+      empty.innerHTML = emptyRoomSvg();
       const p = document.createElement("p");
       p.textContent = t("empty");
       empty.appendChild(p);
@@ -1174,12 +1411,18 @@
 
   function renderEntry(entry) {
     const card = document.createElement("article");
-    card.className = "entry" + (editingId === entry.id ? " editing" : "");
+    card.className = "entry";
+    if (editingId === entry.id) card.classList.add("editing");
+    if (openEntryId === entry.id) card.classList.add("open");
     card.dataset.id = entry.id;
+
+    const top = document.createElement("div");
+    top.className = "entry-top";
 
     const time = document.createElement("div");
     time.className = "entry-time";
     time.textContent = formatTime(entry.ts);
+    top.appendChild(time);
 
     if (editingId === entry.id) {
       const ta = document.createElement("textarea");
@@ -1207,46 +1450,61 @@
         if (!text.trim()) return;
         updateEntry(entry.id, text);
         editingId = null;
+        openEntryId = null;
         renderLog();
         toast(t("saved"));
       });
 
       editActions.append(cancel, save);
-      card.append(time, ta, editActions);
+      card.append(top, ta, editActions);
       queueMicrotask(() => ta.focus());
       return card;
     }
+
+    const more = document.createElement("button");
+    more.type = "button";
+    more.className = "entry-more icon";
+    more.setAttribute("aria-label", t("more"));
+    more.innerHTML =
+      '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="6" r="1.15" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.15" fill="currentColor" stroke="none"/><circle cx="12" cy="18" r="1.15" fill="currentColor" stroke="none"/></svg>';
+    more.addEventListener("click", (e) => {
+      e.stopPropagation();
+      openEntryId = openEntryId === entry.id ? null : entry.id;
+      renderLog();
+    });
+    top.appendChild(more);
+
+    const body = document.createElement("p");
+    body.className = "entry-text";
+    body.textContent = entry.text;
 
     const actions = document.createElement("div");
     actions.className = "entry-actions";
 
     const btnEdit = document.createElement("button");
     btnEdit.type = "button";
-    btnEdit.className = "ghost";
+    btnEdit.className = "secondary";
     btnEdit.textContent = t("edit");
     btnEdit.addEventListener("click", () => {
       editingId = entry.id;
+      openEntryId = null;
       renderLog();
     });
 
     const btnDel = document.createElement("button");
     btnDel.type = "button";
-    btnDel.className = "ghost danger";
+    btnDel.className = "danger";
     btnDel.textContent = t("delete");
     btnDel.addEventListener("click", async () => {
       const ok = await askConfirm(t("deleteTitle"), t("deleteMsg"), t("delete"));
       if (!ok) return;
       deleteEntry(entry.id);
+      openEntryId = null;
       renderLog();
     });
 
     actions.append(btnEdit, btnDel);
-
-    const body = document.createElement("p");
-    body.className = "entry-text";
-    body.textContent = entry.text;
-
-    card.append(time, actions, body);
+    card.append(top, body, actions);
     return card;
   }
 
@@ -1254,8 +1512,6 @@
     const text = el.composer.value.replace(/\s+$/g, "");
     if (!text.trim()) return;
 
-    // If viewing another day, stamp time as noon local on that day (backfill),
-    // but if viewing today use real now.
     const today = localDateKey(new Date());
     let ts = nowIso();
     if (selectedDay !== today) {
@@ -1265,33 +1521,12 @@
       ts = isoFromDate(d);
     }
 
-    state.entries.push({
-      id: uid(),
-      ts: ts,
-      updatedAt: null,
-      text: text,
-    });
+    state.entries.push({ id: uid(), ts: ts, updatedAt: null, text: text });
     persist();
     el.composer.value = "";
+    openEntryId = null;
     renderLog();
     toast(t("saved"));
-  }
-
-  function isoFromDate(d) {
-    const pad = (n) => String(n).padStart(2, "0");
-    const off = -d.getTimezoneOffset();
-    const sign = off >= 0 ? "+" : "-";
-    const oh = pad(Math.floor(Math.abs(off) / 60));
-    const om = pad(Math.abs(off) % 60);
-    return (
-      d.getFullYear() +
-      "-" + pad(d.getMonth() + 1) +
-      "-" + pad(d.getDate()) +
-      "T" + pad(d.getHours()) +
-      ":" + pad(d.getMinutes()) +
-      ":" + pad(d.getSeconds()) +
-      sign + oh + ":" + om
-    );
   }
 
   function updateEntry(id, text) {
@@ -1333,7 +1568,7 @@
   }
 
   function dayPlainText(dayKey) {
-    const list = entriesForDay(dayKey).slice().reverse(); // chronological for share
+    const list = entriesForDay(dayKey).slice().reverse();
     const lines = list.map((e) => formatTime(e.ts) + " — " + e.text);
     return "Liminal Journal — " + dayKey + "\n\n" + (lines.length ? lines.join("\n\n") : "");
   }
@@ -1381,10 +1616,7 @@
           return;
         }
         const days = entries.map(entryDayKey).filter(Boolean).sort();
-        pendingRestore = {
-          entries: entries,
-          settings: data.settings || null,
-        };
+        pendingRestore = { entries: entries, settings: data.settings || null };
         el.restoreSummary.textContent = t("restoreSummary")
           .replace("{count}", String(entries.length))
           .replace("{from}", days[0] || "—")
@@ -1400,9 +1632,7 @@
   function mergeRestore() {
     if (!pendingRestore) return;
     const map = new Map(state.entries.map((e) => [e.id, e]));
-    for (const e of pendingRestore.entries) {
-      map.set(e.id, e);
-    }
+    for (const e of pendingRestore.entries) map.set(e.id, e);
     state.entries = Array.from(map.values());
     pendingRestore = null;
     persist();
@@ -1455,6 +1685,7 @@
     state.settings.theme = order[(i + 1) % order.length];
     persist();
     applyTheme();
+    el.themeValue.textContent = themeLabel();
   }
 
   function toggleLang() {
@@ -1462,6 +1693,102 @@
     persist();
     applyI18n();
     renderLog();
+  }
+
+  function openCalendar() {
+    const d = parseLocalDay(selectedDay);
+    calMonth = new Date(d.getFullYear(), d.getMonth(), 1);
+    renderCalWeekdays();
+    renderCalendar();
+    el.calDialog.showModal();
+  }
+
+  function renderCalWeekdays() {
+    const loc = state.settings.lang === "it" ? "it-IT" : "en-GB";
+    // Monday-first
+    const base = new Date(Date.UTC(2021, 0, 4)); // Monday
+    el.calWeekdays.innerHTML = "";
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(base);
+      d.setUTCDate(base.getUTCDate() + i);
+      const span = document.createElement("span");
+      span.textContent = d.toLocaleDateString(loc, { weekday: "narrow" });
+      el.calWeekdays.appendChild(span);
+    }
+  }
+
+  function renderCalendar() {
+    const loc = state.settings.lang === "it" ? "it-IT" : "en-GB";
+    el.calMonthLabel.textContent = calMonth.toLocaleDateString(loc, {
+      month: "long",
+      year: "numeric",
+    });
+
+    const year = calMonth.getFullYear();
+    const month = calMonth.getMonth();
+    const first = new Date(year, month, 1);
+    // Monday=0 … Sunday=6
+    let startPad = (first.getDay() + 6) % 7;
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const prevDays = new Date(year, month, 0).getDate();
+    const marked = daysWithEntries();
+    const todayKey = localDateKey(new Date());
+
+    el.calGrid.innerHTML = "";
+    const totalCells = 42;
+
+    for (let i = 0; i < totalCells; i++) {
+      let dayNum;
+      let cellMonth = month;
+      let cellYear = year;
+      let muted = false;
+
+      if (i < startPad) {
+        dayNum = prevDays - startPad + i + 1;
+        cellMonth = month - 1;
+        if (cellMonth < 0) {
+          cellMonth = 11;
+          cellYear = year - 1;
+        }
+        muted = true;
+      } else if (i >= startPad + daysInMonth) {
+        dayNum = i - (startPad + daysInMonth) + 1;
+        cellMonth = month + 1;
+        if (cellMonth > 11) {
+          cellMonth = 0;
+          cellYear = year + 1;
+        }
+        muted = true;
+      } else {
+        dayNum = i - startPad + 1;
+      }
+
+      const key =
+        cellYear +
+        "-" +
+        String(cellMonth + 1).padStart(2, "0") +
+        "-" +
+        String(dayNum).padStart(2, "0");
+
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.textContent = String(dayNum);
+      btn.setAttribute("role", "gridcell");
+      if (muted) btn.classList.add("muted");
+      if (key === selectedDay) btn.classList.add("selected");
+      if (key === todayKey) btn.classList.add("today");
+      if (marked.has(key)) btn.classList.add("has-entries");
+      btn.addEventListener("click", () => {
+        setSelectedDay(key);
+        el.calDialog.close();
+      });
+      el.calGrid.appendChild(btn);
+    }
+  }
+
+  function shiftCalMonth(delta) {
+    calMonth = new Date(calMonth.getFullYear(), calMonth.getMonth() + delta, 1);
+    renderCalendar();
   }
 
   function bind() {
@@ -1473,12 +1800,17 @@
       }
     });
 
-    el.dayPicker.addEventListener("change", () => {
-      if (el.dayPicker.value) setSelectedDay(el.dayPicker.value);
-    });
     el.btnPrev.addEventListener("click", () => setSelectedDay(shiftDay(selectedDay, -1)));
     el.btnNext.addEventListener("click", () => setSelectedDay(shiftDay(selectedDay, 1)));
-    el.btnToday.addEventListener("click", () => setSelectedDay(localDateKey(new Date())));
+    el.btnOpenCal.addEventListener("click", openCalendar);
+
+    el.btnCalPrev.addEventListener("click", () => shiftCalMonth(-1));
+    el.btnCalNext.addEventListener("click", () => shiftCalMonth(1));
+    el.btnCalClose.addEventListener("click", () => el.calDialog.close());
+    el.btnCalToday.addEventListener("click", () => {
+      setSelectedDay(localDateKey(new Date()));
+      el.calDialog.close();
+    });
 
     el.btnTheme.addEventListener("click", cycleTheme);
     el.btnLang.addEventListener("click", toggleLang);
@@ -1524,7 +1856,6 @@
         confirmResolver = null;
       }
     });
-
     el.confirmDialog.addEventListener("close", () => {
       if (confirmResolver) {
         confirmResolver(false);
@@ -1544,8 +1875,7 @@
     applyI18n();
     setSelectedDay(localDateKey(new Date()));
     try {
-      const raw = localStorage.getItem(STORAGE_KEY) || "";
-      updateStorageWarning(raw.length);
+      updateStorageWarning((localStorage.getItem(STORAGE_KEY) || "").length);
     } catch (_) {
       updateStorageWarning(0);
     }
