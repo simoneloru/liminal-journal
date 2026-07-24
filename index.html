@@ -499,62 +499,80 @@
       color: var(--fg-muted);
     }
 
+    /* Journal lines: time — note (dense, not app cards) */
     .entry {
       position: relative;
-      background: color-mix(in srgb, var(--bg-elevated) 94%, transparent);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 0.9rem 0.95rem 0.95rem;
-      margin: 0 0 0.65rem;
-      box-shadow: var(--shadow-sm);
-      backdrop-filter: blur(6px);
+      display: grid;
+      grid-template-columns: auto auto 1fr auto;
+      column-gap: 0.45rem;
+      row-gap: 0.25rem;
+      align-items: baseline;
+      padding: 0.4rem 0.1rem 0.45rem;
+      margin: 0;
+      border: none;
+      border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+      border-radius: 0;
+      background: transparent;
+      box-shadow: none;
     }
 
-    .entry::before {
-      content: "";
-      position: absolute;
-      left: 0;
-      top: 0.8rem;
-      bottom: 0.8rem;
-      width: 3px;
-      border-radius: 0 3px 3px 0;
-      background: color-mix(in srgb, var(--accent) 50%, var(--border));
-    }
-
-    .entry-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 0.5rem;
-      margin-bottom: 0.4rem;
+    .entry:last-of-type {
+      border-bottom: none;
     }
 
     .entry-time {
+      grid-column: 1;
       font-family: var(--mono);
-      font-size: 0.76rem;
+      font-size: 0.82rem;
       font-weight: 500;
       letter-spacing: 0.02em;
       color: var(--fg-muted);
       font-variant-numeric: tabular-nums;
-      background: color-mix(in srgb, var(--bg-soft) 65%, transparent);
-      border: 1px solid color-mix(in srgb, var(--border) 90%, transparent);
-      border-radius: var(--radius-pill);
-      padding: 0.2rem 0.55rem;
+      white-space: nowrap;
+      line-height: 1.45;
+    }
+
+    .entry-dash {
+      grid-column: 2;
+      color: var(--fg-faint);
+      font-family: var(--font);
+      font-size: 1rem;
+      line-height: 1.45;
+      user-select: none;
+    }
+
+    .entry-text {
+      grid-column: 3;
+      white-space: pre-wrap;
+      word-break: break-word;
+      margin: 0;
+      font-family: var(--font);
+      font-size: 1.02rem;
+      line-height: 1.45;
+      letter-spacing: -0.01em;
+      min-width: 0;
     }
 
     .entry-more {
-      min-height: 2rem;
-      width: 2rem;
-      min-width: 2rem;
+      grid-column: 4;
+      align-self: start;
+      min-height: 1.75rem;
+      width: 1.75rem;
+      min-width: 1.75rem;
       padding: 0;
       border: none;
       box-shadow: none;
       background: transparent;
       color: var(--fg-faint);
-      border-radius: 8px;
+      border-radius: 6px;
+      opacity: 0.55;
     }
 
     @media (hover: hover) and (pointer: fine) {
+      .entry:hover .entry-more,
+      .entry.open .entry-more {
+        opacity: 1;
+      }
       .entry-more:hover {
         color: var(--fg);
         background: color-mix(in srgb, var(--fg) 6%, transparent);
@@ -562,52 +580,55 @@
     }
 
     .entry-actions {
+      grid-column: 1 / -1;
       display: none;
-      gap: 0.4rem;
-      margin-top: 0.65rem;
-      padding-top: 0.65rem;
-      border-top: 1px solid color-mix(in srgb, var(--border) 90%, transparent);
+      gap: 0.35rem;
+      padding: 0.15rem 0 0.2rem;
     }
 
     .entry.open .entry-actions { display: flex; }
 
     .entry-actions button {
-      flex: 1;
-      min-height: 2.4rem;
-      font-size: 0.88rem;
+      flex: 0 0 auto;
+      min-height: 2.1rem;
+      padding: 0.3rem 0.7rem;
+      font-size: 0.82rem;
     }
 
-    .entry-text {
-      white-space: pre-wrap;
-      word-break: break-word;
-      margin: 0;
-      font-family: var(--font);
-      font-size: 1.05rem;
-      line-height: 1.48;
-      letter-spacing: -0.01em;
+    .entry.editing {
+      display: block;
+      padding: 0.5rem 0 0.65rem;
+      border-bottom-color: color-mix(in srgb, var(--accent) 28%, var(--border));
     }
 
-    .entry.editing .entry-text { display: none; }
-    .entry.editing .entry-more { display: none; }
+    .entry.editing .entry-line {
+      display: flex;
+      gap: 0.45rem;
+      align-items: baseline;
+      margin-bottom: 0.4rem;
+    }
+
+    .entry.editing .entry-text,
+    .entry.editing .entry-more,
+    .entry.editing .entry-dash { display: none; }
 
     .entry.editing textarea {
       width: 100%;
-      min-height: 5.5rem;
+      min-height: 4.5rem;
       resize: vertical;
       border: 1px solid var(--border);
       border-radius: var(--radius-sm);
-      background: var(--bg);
-      padding: 0.75rem 0.85rem;
+      background: color-mix(in srgb, var(--bg-elevated) 80%, transparent);
+      padding: 0.65rem 0.75rem;
       font-family: var(--font);
-      font-size: 1.05rem;
+      font-size: 1.02rem;
       line-height: 1.45;
-      margin-top: 0.25rem;
     }
 
     .entry-edit-actions {
       display: flex;
-      gap: 0.45rem;
-      margin-top: 0.6rem;
+      gap: 0.4rem;
+      margin-top: 0.45rem;
       justify-content: flex-end;
     }
 
@@ -2082,21 +2103,27 @@
   }
 
   function renderEntry(entry) {
-    const card = document.createElement("article");
-    card.className = "entry";
-    if (editingId === entry.id) card.classList.add("editing");
-    if (openEntryId === entry.id) card.classList.add("open");
-    card.dataset.id = entry.id;
+    const row = document.createElement("article");
+    row.className = "entry";
+    if (editingId === entry.id) row.classList.add("editing");
+    if (openEntryId === entry.id) row.classList.add("open");
+    row.dataset.id = entry.id;
 
-    const top = document.createElement("div");
-    top.className = "entry-top";
-
-    const time = document.createElement("div");
+    const time = document.createElement("time");
     time.className = "entry-time";
+    time.dateTime = entry.ts;
     time.textContent = formatTime(entry.ts);
-    top.appendChild(time);
+
+    const dash = document.createElement("span");
+    dash.className = "entry-dash";
+    dash.setAttribute("aria-hidden", "true");
+    dash.textContent = "—";
 
     if (editingId === entry.id) {
+      const line = document.createElement("div");
+      line.className = "entry-line";
+      line.append(time, dash);
+
       const ta = document.createElement("textarea");
       ta.value = entry.text;
       ta.setAttribute("aria-label", t("edit"));
@@ -2128,10 +2155,14 @@
       });
 
       editActions.append(cancel, save);
-      card.append(top, ta, editActions);
+      row.append(line, ta, editActions);
       queueMicrotask(() => ta.focus());
-      return card;
+      return row;
     }
+
+    const body = document.createElement("p");
+    body.className = "entry-text";
+    body.textContent = entry.text;
 
     const more = document.createElement("button");
     more.type = "button";
@@ -2144,11 +2175,6 @@
       openEntryId = openEntryId === entry.id ? null : entry.id;
       renderLog();
     });
-    top.appendChild(more);
-
-    const body = document.createElement("p");
-    body.className = "entry-text";
-    body.textContent = entry.text;
 
     const actions = document.createElement("div");
     actions.className = "entry-actions";
@@ -2176,8 +2202,8 @@
     });
 
     actions.append(btnEdit, btnDel);
-    card.append(top, body, actions);
-    return card;
+    row.append(time, dash, body, more, actions);
+    return row;
   }
 
   function saveComposer() {
