@@ -377,11 +377,13 @@
       scroll-margin-bottom: 9rem;
     }
 
+    /* Full-page write mode: hide log & chrome so attention stays on "now" */
     body.composer-expanded main#log,
     body.composer-expanded .day-bar,
-    body.composer-expanded .app-header {
-      /* keep in DOM but writing surface takes focus */
+    body.composer-expanded .app-header,
+    body.composer-expanded .room-bg {
       visibility: hidden;
+      pointer-events: none;
     }
 
     .empty {
@@ -547,7 +549,7 @@
 
     .composer-toolbar {
       display: none;
-      align-items: center;
+      align-items: flex-start;
       justify-content: space-between;
       gap: 0.5rem;
       padding: 0.15rem 0.25rem 0.55rem;
@@ -555,12 +557,30 @@
       margin-bottom: 0.45rem;
     }
 
+    .composer-toolbar-text {
+      min-width: 0;
+    }
+
     .composer-toolbar h2 {
       margin: 0;
       font-family: var(--font);
-      font-size: 1.05rem;
+      font-size: 1.08rem;
       font-weight: 600;
       letter-spacing: -0.02em;
+    }
+
+    .composer-toolbar .composer-day {
+      margin: 0.25rem 0 0;
+      font-size: 0.8rem;
+      color: var(--fg-muted);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .composer-toolbar .composer-hint-expanded {
+      margin: 0.35rem 0 0;
+      font-size: 0.75rem;
+      color: var(--fg-faint);
+      line-height: 1.35;
     }
 
     .composer-compact-row {
@@ -638,9 +658,9 @@
       inset: 0;
       z-index: 60;
       padding:
-        calc(0.65rem + var(--safe-t))
+        calc(0.55rem + var(--safe-t))
         0
-        calc(0.65rem + var(--safe-b));
+        calc(0.55rem + var(--safe-b));
       background: var(--bg);
       pointer-events: auto;
     }
@@ -653,9 +673,13 @@
       height: 100%;
       display: flex;
       flex-direction: column;
-      border-radius: 18px;
-      padding: 0.75rem;
-      background: var(--bg-elevated);
+      border-radius: 0;
+      border: none;
+      padding: 0.85rem 0.35rem 0.5rem;
+      background: transparent;
+      box-shadow: none;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
     }
 
     .composer.is-expanded .composer-toolbar {
@@ -1045,7 +1069,11 @@
       <div class="wrap">
         <div class="composer-shell">
           <div class="composer-toolbar">
-            <h2 id="composer-expand-title"></h2>
+            <div class="composer-toolbar-text">
+              <h2 id="composer-expand-title"></h2>
+              <p class="composer-day" id="composer-day"></p>
+              <p class="composer-hint-expanded" id="composer-hint-expanded"></p>
+            </div>
             <button type="button" class="icon btn-collapse" id="btn-collapse" aria-label="Collapse">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 14l6-6 6 6"/></svg>
             </button>
@@ -1198,9 +1226,10 @@
       prevMonth: "Previous month",
       nextMonth: "Next month",
       shortcut: "Enter to save · expand for longer notes",
-      expand: "Expand",
-      collapse: "Collapse",
-      expandTitle: "Write freely",
+      expand: "Expand to focus",
+      collapse: "Back to log",
+      expandTitle: "Just this moment",
+      expandHint: "Log is hidden so you can stay with the next tiny step. Enter for a new line · ⌘/Ctrl+Enter to save.",
       replaceConfirmTitle: "Replace everything?",
       replaceConfirmMsg: "Your current journal will be replaced by this backup.",
       inspiredBy: "Inspired by interstitial journaling for ADHD.",
@@ -1249,9 +1278,10 @@
       prevMonth: "Mese precedente",
       nextMonth: "Mese successivo",
       shortcut: "Invio salva · espandi per note lunghe",
-      expand: "Espandi",
-      collapse: "Riduci",
-      expandTitle: "Scrivi liberamente",
+      expand: "Espandi e concentrati",
+      collapse: "Torna al log",
+      expandTitle: "Solo questo momento",
+      expandHint: "Il log è nascosto così resti sul prossimo micro-passo. Invio = a capo · ⌘/Ctrl+Invio = salva.",
       replaceConfirmTitle: "Sostituire tutto?",
       replaceConfirmMsg: "Il diario attuale verrà sostituito da questo backup.",
       inspiredBy: "Ispirato all’interstitial journaling per l’ADHD.",
@@ -1284,6 +1314,8 @@
     btnExpand: document.getElementById("btn-expand"),
     btnCollapse: document.getElementById("btn-collapse"),
     composerExpandTitle: document.getElementById("composer-expand-title"),
+    composerDay: document.getElementById("composer-day"),
+    composerHintExpanded: document.getElementById("composer-hint-expanded"),
     btnTheme: document.getElementById("btn-theme"),
     btnLang: document.getElementById("btn-lang"),
     themeLabel: document.getElementById("theme-label"),
@@ -1412,6 +1444,8 @@
     el.composer.placeholder = t("placeholder");
     el.btnSave.textContent = t("save");
     el.composerExpandTitle.textContent = t("expandTitle");
+    el.composerHintExpanded.textContent = t("expandHint");
+    el.composerDay.textContent = formatDayLabel(selectedDay);
     el.btnExpand.setAttribute("aria-label", t("expand"));
     el.btnExpand.title = t("expand");
     el.btnCollapse.setAttribute("aria-label", t("collapse"));
@@ -1553,6 +1587,7 @@
     el.dayLabelText.textContent = formatDayLabel(selectedDay);
     const isToday = selectedDay === localDateKey(new Date());
     el.todayDot.hidden = !isToday;
+    if (el.composerDay) el.composerDay.textContent = formatDayLabel(selectedDay);
   }
 
   function setSelectedDay(key) {
@@ -1731,9 +1766,11 @@
     el.composer.setAttribute("rows", on ? "12" : "1");
     el.composer.setAttribute("enterkeyhint", on ? "enter" : "send");
     if (on) {
+      el.composerDay.textContent = formatDayLabel(selectedDay);
+      el.composerExpandTitle.textContent = t("expandTitle");
+      el.composerHintExpanded.textContent = t("expandHint");
       queueMicrotask(() => {
         el.composer.focus();
-        // place caret at end
         const len = el.composer.value.length;
         try {
           el.composer.setSelectionRange(len, len);
