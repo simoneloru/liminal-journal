@@ -369,12 +369,19 @@
     /* Log */
     main#log {
       position: relative;
-      padding: 0.55rem 0 14.5rem;
+      padding: 0.55rem 0 8.5rem;
       min-height: 42vh;
     }
 
     .entry:last-child {
-      scroll-margin-bottom: 15rem;
+      scroll-margin-bottom: 9rem;
+    }
+
+    body.composer-expanded main#log,
+    body.composer-expanded .day-bar,
+    body.composer-expanded .app-header {
+      /* keep in DOM but writing surface takes focus */
+      visibility: hidden;
     }
 
     .empty {
@@ -515,42 +522,71 @@
       justify-content: flex-end;
     }
 
-    /* Composer */
+    /* Composer — compact single-line dock; optional full-page expand */
     .composer {
       position: fixed;
       left: 0;
       right: 0;
       bottom: 0;
       z-index: 30;
-      padding: 0.55rem 0 calc(0.55rem + var(--safe-b));
-      background: linear-gradient(to top, color-mix(in srgb, var(--bg) 97%, transparent) 50%, transparent);
+      padding: 0.5rem 0 calc(0.5rem + var(--safe-b));
+      background: linear-gradient(to top, color-mix(in srgb, var(--bg) 97%, transparent) 45%, transparent);
       pointer-events: none;
     }
 
     .composer-shell {
       pointer-events: auto;
-      border-radius: 18px;
+      border-radius: 16px;
       border: 1px solid var(--border);
       background: color-mix(in srgb, var(--bg-elevated) 96%, transparent);
       backdrop-filter: blur(16px) saturate(1.1);
       -webkit-backdrop-filter: blur(16px) saturate(1.1);
       box-shadow: var(--shadow-md);
-      padding: 0.7rem 0.75rem 0.75rem;
+      padding: 0.45rem;
+    }
+
+    .composer-toolbar {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      padding: 0.15rem 0.25rem 0.55rem;
+      border-bottom: 1px solid color-mix(in srgb, var(--border) 85%, transparent);
+      margin-bottom: 0.45rem;
+    }
+
+    .composer-toolbar h2 {
+      margin: 0;
+      font-family: var(--font);
+      font-size: 1.05rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+
+    .composer-compact-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 0.4rem;
     }
 
     #composer-text {
+      flex: 1;
       width: 100%;
-      min-height: 4.6rem;
-      max-height: 10rem;
-      resize: vertical;
+      min-height: 2.75rem;
+      max-height: 2.75rem;
+      height: 2.75rem;
+      resize: none;
       border: 1px solid transparent;
       border-radius: 12px;
       background: color-mix(in srgb, var(--bg) 50%, var(--bg-elevated));
-      padding: 0.8rem 0.85rem;
+      padding: 0.65rem 0.8rem;
       font-family: var(--font);
-      font-size: 1.05rem;
-      line-height: 1.45;
+      font-size: 1.02rem;
+      line-height: 1.35;
       box-shadow: inset 0 1px 2px rgb(0 0 0 / 3%);
+      overflow-x: auto;
+      overflow-y: hidden;
+      white-space: nowrap;
     }
 
     #composer-text::placeholder {
@@ -565,24 +601,107 @@
       outline: none;
     }
 
-    .composer-row {
+    .composer-actions {
       display: flex;
-      gap: 0.55rem;
+      gap: 0.35rem;
+      flex: 0 0 auto;
       align-items: center;
-      margin-top: 0.55rem;
     }
 
-    .composer-row .primary {
-      flex: 1;
-      min-height: 2.8rem;
+    .composer-actions .primary {
+      min-height: 2.75rem;
+      min-width: 4.6rem;
+      padding-inline: 0.9rem;
       border-radius: 12px;
+    }
+
+    .composer-actions .icon {
+      min-height: 2.75rem;
+      width: 2.75rem;
+      min-width: 2.75rem;
+      border: 1px solid var(--border);
+      background: var(--bg-elevated);
+      color: var(--fg-muted);
+      box-shadow: var(--shadow-sm);
     }
 
     .hint {
       display: none;
-      font-size: 0.72rem;
-      color: var(--fg-faint);
+    }
+
+    /* Full-page writing mode */
+    body.composer-expanded {
+      overflow: hidden;
+    }
+
+    .composer.is-expanded {
+      inset: 0;
+      z-index: 60;
+      padding:
+        calc(0.65rem + var(--safe-t))
+        0
+        calc(0.65rem + var(--safe-b));
+      background: var(--bg);
+      pointer-events: auto;
+    }
+
+    .composer.is-expanded .wrap {
+      height: 100%;
+    }
+
+    .composer.is-expanded .composer-shell {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      border-radius: 18px;
+      padding: 0.75rem;
+      background: var(--bg-elevated);
+    }
+
+    .composer.is-expanded .composer-toolbar {
+      display: flex;
+    }
+
+    .composer.is-expanded .composer-compact-row {
       flex: 1;
+      flex-direction: column;
+      align-items: stretch;
+      min-height: 0;
+      gap: 0.65rem;
+    }
+
+    .composer.is-expanded #composer-text {
+      flex: 1;
+      min-height: 0;
+      max-height: none;
+      height: auto;
+      white-space: pre-wrap;
+      overflow-y: auto;
+      overflow-x: hidden;
+      font-size: 1.12rem;
+      line-height: 1.5;
+      padding: 0.9rem 1rem;
+    }
+
+    .composer.is-expanded .composer-actions {
+      width: 100%;
+    }
+
+    .composer.is-expanded .composer-actions .primary {
+      flex: 1;
+      min-height: 2.9rem;
+    }
+
+    .composer.is-expanded .btn-expand {
+      display: none;
+    }
+
+    .composer.is-expanded .btn-collapse {
+      display: inline-grid;
+    }
+
+    .btn-collapse {
+      display: none;
     }
 
     /* Dialogs */
@@ -783,7 +902,7 @@
     .toast {
       position: fixed;
       left: 50%;
-      bottom: calc(11.4rem + var(--safe-b));
+      bottom: calc(6.2rem + var(--safe-b));
       transform: translateX(-50%) translateY(6px);
       z-index: 40;
       background: color-mix(in srgb, var(--fg) 94%, var(--accent));
@@ -810,11 +929,9 @@
         font-size: 0.82rem;
         -webkit-line-clamp: 1;
       }
-      .composer-row .primary {
-        flex: 0 0 auto;
-        min-width: 8.5rem;
+      .composer-actions .primary {
+        min-width: 5.5rem;
       }
-      .hint { display: block; }
       .room-bg svg {
         width: min(78vw, 40rem);
         left: 52%;
@@ -924,14 +1041,33 @@
 
     <main class="wrap" id="log" aria-live="polite"></main>
 
-    <div class="composer">
+    <div class="composer" id="composer">
       <div class="wrap">
         <div class="composer-shell">
-          <label class="sr-only" for="composer-text">Entry</label>
-          <textarea id="composer-text" rows="3" autocomplete="off" enterkeyhint="enter"></textarea>
-          <div class="composer-row">
-            <span class="hint" id="composer-hint"></span>
-            <button type="button" class="primary" id="btn-save"></button>
+          <div class="composer-toolbar">
+            <h2 id="composer-expand-title"></h2>
+            <button type="button" class="icon btn-collapse" id="btn-collapse" aria-label="Collapse">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 14l6-6 6 6"/></svg>
+            </button>
+          </div>
+          <div class="composer-compact-row">
+            <label class="sr-only" for="composer-text">Entry</label>
+            <textarea
+              id="composer-text"
+              rows="1"
+              autocomplete="off"
+              enterkeyhint="send"
+              autocapitalize="sentences"
+            ></textarea>
+            <div class="composer-actions">
+              <button type="button" class="icon btn-expand" id="btn-expand" aria-label="Expand">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M9 4H5v4M15 4h4v4M5 15v4h4M19 15v4h-4"/>
+                  <path d="M5 4l5 5M19 4l-5 5M5 20l5-5M19 20l-5-5"/>
+                </svg>
+              </button>
+              <button type="button" class="primary" id="btn-save"></button>
+            </div>
           </div>
         </div>
       </div>
@@ -1061,7 +1197,10 @@
       openCalendar: "Open calendar",
       prevMonth: "Previous month",
       nextMonth: "Next month",
-      shortcut: "⌘/Ctrl+Enter to save",
+      shortcut: "Enter to save · expand for longer notes",
+      expand: "Expand",
+      collapse: "Collapse",
+      expandTitle: "Write freely",
       replaceConfirmTitle: "Replace everything?",
       replaceConfirmMsg: "Your current journal will be replaced by this backup.",
       inspiredBy: "Inspired by interstitial journaling for ADHD.",
@@ -1109,7 +1248,10 @@
       openCalendar: "Apri calendario",
       prevMonth: "Mese precedente",
       nextMonth: "Mese successivo",
-      shortcut: "⌘/Ctrl+Invio per salvare",
+      shortcut: "Invio salva · espandi per note lunghe",
+      expand: "Espandi",
+      collapse: "Riduci",
+      expandTitle: "Scrivi liberamente",
       replaceConfirmTitle: "Sostituire tutto?",
       replaceConfirmMsg: "Il diario attuale verrà sostituito da questo backup.",
       inspiredBy: "Ispirato all’interstitial journaling per l’ADHD.",
@@ -1136,9 +1278,12 @@
     btnPrev: document.getElementById("btn-prev-day"),
     btnNext: document.getElementById("btn-next-day"),
     log: document.getElementById("log"),
+    composerRoot: document.getElementById("composer"),
     composer: document.getElementById("composer-text"),
-    composerHint: document.getElementById("composer-hint"),
     btnSave: document.getElementById("btn-save"),
+    btnExpand: document.getElementById("btn-expand"),
+    btnCollapse: document.getElementById("btn-collapse"),
+    composerExpandTitle: document.getElementById("composer-expand-title"),
     btnTheme: document.getElementById("btn-theme"),
     btnLang: document.getElementById("btn-lang"),
     themeLabel: document.getElementById("theme-label"),
@@ -1266,7 +1411,11 @@
     el.subtitle.textContent = t("subtitle");
     el.composer.placeholder = t("placeholder");
     el.btnSave.textContent = t("save");
-    el.composerHint.textContent = t("shortcut");
+    el.composerExpandTitle.textContent = t("expandTitle");
+    el.btnExpand.setAttribute("aria-label", t("expand"));
+    el.btnExpand.title = t("expand");
+    el.btnCollapse.setAttribute("aria-label", t("collapse"));
+    el.btnCollapse.title = t("collapse");
     el.menuTitle.textContent = t("menu");
     el.btnDownload.textContent = t("download");
     el.btnRestore.textContent = t("restore");
@@ -1566,9 +1715,31 @@
     persist();
     el.composer.value = "";
     openEntryId = null;
+    setComposerExpanded(false);
     renderLog();
     scrollToLatestEntry();
     toast(t("saved"));
+  }
+
+  function isComposerExpanded() {
+    return el.composerRoot.classList.contains("is-expanded");
+  }
+
+  function setComposerExpanded(on) {
+    el.composerRoot.classList.toggle("is-expanded", on);
+    document.body.classList.toggle("composer-expanded", on);
+    el.composer.setAttribute("rows", on ? "12" : "1");
+    el.composer.setAttribute("enterkeyhint", on ? "enter" : "send");
+    if (on) {
+      queueMicrotask(() => {
+        el.composer.focus();
+        // place caret at end
+        const len = el.composer.value.length;
+        try {
+          el.composer.setSelectionRange(len, len);
+        } catch (_) {}
+      });
+    }
   }
 
   function updateEntry(id, text) {
@@ -1835,10 +2006,27 @@
 
   function bind() {
     el.btnSave.addEventListener("click", saveComposer);
+    el.btnExpand.addEventListener("click", () => setComposerExpanded(true));
+    el.btnCollapse.addEventListener("click", () => setComposerExpanded(false));
     el.composer.addEventListener("keydown", (e) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+      if (e.key === "Escape" && isComposerExpanded()) {
         e.preventDefault();
-        saveComposer();
+        setComposerExpanded(false);
+        return;
+      }
+      // Compact: Enter saves. Expanded: Cmd/Ctrl+Enter saves; Enter = newline.
+      if (e.key === "Enter") {
+        if (isComposerExpanded()) {
+          if (e.metaKey || e.ctrlKey) {
+            e.preventDefault();
+            saveComposer();
+          }
+          return;
+        }
+        if (!e.shiftKey) {
+          e.preventDefault();
+          saveComposer();
+        }
       }
     });
 
