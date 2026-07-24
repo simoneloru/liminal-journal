@@ -1,0 +1,1185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="color-scheme" content="light dark" />
+  <meta name="theme-color" content="#f4f2ee" />
+  <meta name="description" content="Liminal Journal — a minimal app for interstitial journaling. Log tiny steps, stay in the present." />
+  <title>Liminal Journal</title>
+  <style>
+    :root {
+      --bg: #f4f2ee;
+      --bg-elevated: #fffcf8;
+      --fg: #1c1b19;
+      --fg-muted: #5c5a55;
+      --border: #ddd8cf;
+      --accent: #2f4a3c;
+      --accent-fg: #f4f2ee;
+      --danger: #8b3a2f;
+      --danger-bg: #f8ebe8;
+      --warn-bg: #f5eedc;
+      --warn-fg: #5a4a22;
+      --shadow: 0 1px 2px rgb(0 0 0 / 6%);
+      --radius: 12px;
+      --font: "Segoe UI", system-ui, -apple-system, sans-serif;
+      --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+      --tap: 44px;
+      --safe-b: env(safe-area-inset-bottom, 0px);
+      --safe-t: env(safe-area-inset-top, 0px);
+      --composer-h: auto;
+      --max: 40rem;
+    }
+
+    html[data-theme="dark"] {
+      --bg: #161513;
+      --bg-elevated: #1f1e1b;
+      --fg: #eceae4;
+      --fg-muted: #a8a59c;
+      --border: #333029;
+      --accent: #8fb9a0;
+      --accent-fg: #132018;
+      --danger: #e0958a;
+      --danger-bg: #2a1a17;
+      --warn-bg: #2a2416;
+      --warn-fg: #e6d7a8;
+      --shadow: 0 1px 2px rgb(0 0 0 / 35%);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--font);
+      font-size: 16px;
+      line-height: 1.45;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      padding-top: var(--safe-t);
+      padding-bottom: calc(var(--safe-b) + 0.5rem);
+    }
+
+    button, input, textarea {
+      font: inherit;
+      color: inherit;
+    }
+
+    button {
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: var(--bg-elevated);
+      border-radius: 10px;
+      min-height: var(--tap);
+      padding: 0.55rem 0.85rem;
+      box-shadow: var(--shadow);
+    }
+
+    button:hover { filter: brightness(0.98); }
+    button:active { transform: translateY(1px); }
+    button:focus-visible,
+    input:focus-visible,
+    textarea:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    button.primary {
+      background: var(--accent);
+      color: var(--accent-fg);
+      border-color: transparent;
+      font-weight: 600;
+    }
+
+    button.ghost {
+      background: transparent;
+      box-shadow: none;
+    }
+
+    button.danger {
+      color: var(--danger);
+      border-color: color-mix(in srgb, var(--danger) 35%, var(--border));
+    }
+
+    button.icon {
+      width: var(--tap);
+      min-width: var(--tap);
+      padding: 0;
+      display: inline-grid;
+      place-items: center;
+      font-size: 1.15rem;
+      line-height: 1;
+    }
+
+    .wrap {
+      width: min(100% - 1.25rem, var(--max));
+      margin-inline: auto;
+    }
+
+    header.app-header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: color-mix(in srgb, var(--bg) 92%, transparent);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      padding: 0.65rem 0 0.55rem;
+    }
+
+    .header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 1.05rem;
+      font-weight: 650;
+      letter-spacing: -0.01em;
+    }
+
+    .brand p {
+      margin: 0.1rem 0 0;
+      font-size: 0.8rem;
+      color: var(--fg-muted);
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 0.35rem;
+      align-items: center;
+    }
+
+    #storage-warning {
+      display: none;
+      margin: 0.75rem auto 0;
+      padding: 0.7rem 0.85rem;
+      border-radius: var(--radius);
+      background: var(--warn-bg);
+      color: var(--warn-fg);
+      border: 1px solid color-mix(in srgb, var(--warn-fg) 25%, transparent);
+      font-size: 0.9rem;
+    }
+
+    #storage-warning.visible { display: block; }
+
+    .day-nav {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      margin: 1rem auto 0.75rem;
+    }
+
+    .day-nav input[type="date"] {
+      flex: 1;
+      min-height: var(--tap);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--bg-elevated);
+      padding: 0.4rem 0.65rem;
+      box-shadow: var(--shadow);
+    }
+
+    main#log {
+      padding-bottom: 12.5rem;
+      min-height: 40vh;
+    }
+
+    .empty {
+      margin: 2rem 0;
+      text-align: center;
+      color: var(--fg-muted);
+      font-size: 0.95rem;
+      padding: 0 0.5rem;
+    }
+
+    .entry {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.85rem 0.9rem;
+      margin: 0 0 0.65rem;
+      box-shadow: var(--shadow);
+    }
+
+    .entry-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 0.5rem;
+      margin-bottom: 0.35rem;
+    }
+
+    .entry-time {
+      font-family: var(--mono);
+      font-size: 0.85rem;
+      color: var(--fg-muted);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .entry-actions {
+      display: flex;
+      gap: 0.25rem;
+    }
+
+    .entry-actions button {
+      min-height: 2rem;
+      padding: 0.25rem 0.55rem;
+      font-size: 0.8rem;
+    }
+
+    .entry-text {
+      white-space: pre-wrap;
+      word-break: break-word;
+      margin: 0;
+    }
+
+    .entry.editing textarea {
+      width: 100%;
+      min-height: 5rem;
+      resize: vertical;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--bg);
+      padding: 0.65rem 0.75rem;
+      margin-top: 0.35rem;
+    }
+
+    .entry-edit-actions {
+      display: flex;
+      gap: 0.4rem;
+      margin-top: 0.55rem;
+      justify-content: flex-end;
+    }
+
+    .composer {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 30;
+      background: color-mix(in srgb, var(--bg) 94%, transparent);
+      backdrop-filter: blur(12px);
+      border-top: 1px solid var(--border);
+      padding: 0.65rem 0 calc(0.65rem + var(--safe-b));
+    }
+
+    .composer-inner {
+      display: grid;
+      gap: 0.5rem;
+    }
+
+    #composer-text {
+      width: 100%;
+      min-height: 4.5rem;
+      max-height: 10rem;
+      resize: vertical;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg-elevated);
+      padding: 0.75rem 0.85rem;
+      box-shadow: var(--shadow);
+    }
+
+    .composer-row {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .composer-row .primary {
+      flex: 1;
+    }
+
+    .hint {
+      font-size: 0.75rem;
+      color: var(--fg-muted);
+    }
+
+    dialog {
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: var(--bg-elevated);
+      color: var(--fg);
+      padding: 0;
+      width: min(calc(100% - 2rem), 24rem);
+      box-shadow: 0 12px 40px rgb(0 0 0 / 18%);
+    }
+
+    dialog::backdrop {
+      background: rgb(0 0 0 / 45%);
+    }
+
+    .dialog-body {
+      padding: 1.1rem 1.15rem 1rem;
+    }
+
+    .dialog-body h2 {
+      margin: 0 0 0.5rem;
+      font-size: 1.05rem;
+    }
+
+    .dialog-body p {
+      margin: 0 0 0.75rem;
+      color: var(--fg-muted);
+      font-size: 0.92rem;
+    }
+
+    .dialog-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      justify-content: flex-end;
+      padding: 0 1.15rem 1.1rem;
+    }
+
+    .menu-list {
+      display: grid;
+      gap: 0.4rem;
+      margin: 0.5rem 0 0;
+    }
+
+    .menu-list button {
+      width: 100%;
+      text-align: left;
+      justify-content: flex-start;
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      border: 0;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: calc(10.5rem + var(--safe-b));
+      transform: translateX(-50%);
+      z-index: 40;
+      background: var(--fg);
+      color: var(--bg);
+      padding: 0.55rem 0.9rem;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+      max-width: min(90vw, 22rem);
+      text-align: center;
+    }
+
+    .toast.show { opacity: 0.95; }
+
+    @media (min-width: 640px) {
+      .brand p { font-size: 0.85rem; }
+      .composer-row .primary { flex: 0 0 auto; min-width: 8rem; }
+    }
+  </style>
+</head>
+<body>
+  <header class="app-header">
+    <div class="wrap header-row">
+      <div class="brand">
+        <h1 id="app-title">Liminal Journal</h1>
+        <p id="app-subtitle"></p>
+      </div>
+      <div class="header-actions">
+        <button type="button" class="icon ghost" id="btn-theme" aria-label="Theme" title="Theme">◐</button>
+        <button type="button" class="icon ghost" id="btn-lang" aria-label="Language" title="Language">EN</button>
+        <button type="button" class="icon ghost" id="btn-menu" aria-label="Menu" title="Menu" aria-haspopup="dialog">⋯</button>
+      </div>
+    </div>
+    <div class="wrap" id="storage-warning" role="status"></div>
+  </header>
+
+  <div class="wrap day-nav" role="navigation" aria-label="Day">
+    <button type="button" class="icon" id="btn-prev-day" aria-label="Previous day">‹</button>
+    <label class="sr-only" for="day-picker">Day</label>
+    <input type="date" id="day-picker" />
+    <button type="button" class="icon" id="btn-next-day" aria-label="Next day">›</button>
+    <button type="button" class="ghost" id="btn-today" hidden></button>
+  </div>
+
+  <main class="wrap" id="log" aria-live="polite"></main>
+
+  <div class="composer">
+    <div class="wrap composer-inner">
+      <label class="sr-only" for="composer-text" id="composer-label">Entry</label>
+      <textarea id="composer-text" rows="3" autocomplete="off" enterkeyhint="enter"></textarea>
+      <div class="composer-row">
+        <span class="hint" id="composer-hint"></span>
+        <button type="button" class="primary" id="btn-save"></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <dialog id="menu-dialog">
+    <div class="dialog-body">
+      <h2 id="menu-title"></h2>
+      <div class="menu-list">
+        <button type="button" id="btn-download"></button>
+        <button type="button" id="btn-restore"></button>
+        <button type="button" id="btn-share-day"></button>
+      </div>
+    </div>
+    <div class="dialog-actions">
+      <button type="button" class="ghost" id="btn-menu-close"></button>
+    </div>
+  </dialog>
+
+  <dialog id="restore-dialog">
+    <div class="dialog-body">
+      <h2 id="restore-title"></h2>
+      <p id="restore-summary"></p>
+    </div>
+    <div class="dialog-actions">
+      <button type="button" class="ghost" id="btn-restore-cancel"></button>
+      <button type="button" class="danger" id="btn-restore-replace"></button>
+      <button type="button" class="primary" id="btn-restore-merge"></button>
+    </div>
+  </dialog>
+
+  <dialog id="confirm-dialog">
+    <div class="dialog-body">
+      <h2 id="confirm-title"></h2>
+      <p id="confirm-message"></p>
+    </div>
+    <div class="dialog-actions">
+      <button type="button" class="ghost" id="btn-confirm-cancel"></button>
+      <button type="button" class="danger" id="btn-confirm-ok"></button>
+    </div>
+  </dialog>
+
+  <input type="file" id="file-input" accept="application/json,.json" hidden />
+
+  <script>
+(function () {
+  "use strict";
+
+  const STORAGE_KEY = "liminal-journal:v1";
+  const SOFT_BYTES = 1.5 * 1024 * 1024;
+  const SOFT_COUNT = 1500;
+
+  const I18N = {
+    en: {
+      title: "Liminal Journal",
+      subtitle: "What are you doing right now? Keep the next step tiny.",
+      placeholder: "e.g. Opened the project folder",
+      save: "Save",
+      empty: "No entries this day. Write a micro-step and tap Save.",
+      download: "Download backup",
+      restore: "Restore backup",
+      shareDay: "Share this day",
+      merge: "Merge with existing",
+      replace: "Replace everything",
+      storageWarn: "Backup recommended — storage is getting full. Saving still works.",
+      menu: "Menu",
+      close: "Close",
+      cancel: "Cancel",
+      today: "Today",
+      edit: "Edit",
+      delete: "Delete",
+      saveEdit: "Save",
+      deleteTitle: "Delete entry?",
+      deleteMsg: "This cannot be undone.",
+      confirmOk: "OK",
+      restoreTitle: "Restore backup",
+      restoreSummary: "{count} entries · {from} → {to}",
+      restoreEmpty: "This file has no entries.",
+      restoreBad: "Could not read that backup file.",
+      saved: "Saved",
+      restored: "Restored",
+      shared: "Shared",
+      copied: "Copied to clipboard",
+      downloaded: "Backup downloaded",
+      theme: "Theme",
+      lang: "Language",
+      prevDay: "Previous day",
+      nextDay: "Next day",
+      shortcut: "⌘/Ctrl+Enter to save",
+      replaceConfirmTitle: "Replace everything?",
+      replaceConfirmMsg: "Your current journal will be replaced by this backup.",
+    },
+    it: {
+      title: "Liminal Journal",
+      subtitle: "Cosa stai facendo adesso? Il prossimo passo, piccolissimo.",
+      placeholder: "es. Ho aperto la cartella del progetto",
+      save: "Salva",
+      empty: "Nessuna voce in questo giorno. Scrivi un micro-passo e tocca Salva.",
+      download: "Scarica backup",
+      restore: "Ripristina backup",
+      shareDay: "Condividi questo giorno",
+      merge: "Unisci a quelli esistenti",
+      replace: "Sostituisci tutto",
+      storageWarn: "Ti consiglio un backup — lo spazio si sta riempiendo. Puoi comunque salvare.",
+      menu: "Menu",
+      close: "Chiudi",
+      cancel: "Annulla",
+      today: "Oggi",
+      edit: "Modifica",
+      delete: "Elimina",
+      saveEdit: "Salva",
+      deleteTitle: "Eliminare la voce?",
+      deleteMsg: "Questa azione non si può annullare.",
+      confirmOk: "OK",
+      restoreTitle: "Ripristina backup",
+      restoreSummary: "{count} voci · {from} → {to}",
+      restoreEmpty: "Questo file non contiene voci.",
+      restoreBad: "Impossibile leggere questo backup.",
+      saved: "Salvato",
+      restored: "Ripristinato",
+      shared: "Condiviso",
+      copied: "Copiato negli appunti",
+      downloaded: "Backup scaricato",
+      theme: "Tema",
+      lang: "Lingua",
+      prevDay: "Giorno precedente",
+      nextDay: "Giorno successivo",
+      shortcut: "⌘/Ctrl+Invio per salvare",
+      replaceConfirmTitle: "Sostituire tutto?",
+      replaceConfirmMsg: "Il diario attuale verrà sostituito da questo backup.",
+    },
+  };
+
+  /** @type {{version:number, entries: Array<{id:string,ts:string,updatedAt:?string,text:string}>, settings:{theme:string,lang:string}}} */
+  let state = defaultState();
+  let selectedDay = localDateKey(new Date());
+  let pendingRestore = null;
+  let confirmResolver = null;
+  let editingId = null;
+  let toastTimer = null;
+
+  const el = {
+    title: document.getElementById("app-title"),
+    subtitle: document.getElementById("app-subtitle"),
+    storageWarning: document.getElementById("storage-warning"),
+    dayPicker: document.getElementById("day-picker"),
+    btnPrev: document.getElementById("btn-prev-day"),
+    btnNext: document.getElementById("btn-next-day"),
+    btnToday: document.getElementById("btn-today"),
+    log: document.getElementById("log"),
+    composer: document.getElementById("composer-text"),
+    composerHint: document.getElementById("composer-hint"),
+    btnSave: document.getElementById("btn-save"),
+    btnTheme: document.getElementById("btn-theme"),
+    btnLang: document.getElementById("btn-lang"),
+    btnMenu: document.getElementById("btn-menu"),
+    menuDialog: document.getElementById("menu-dialog"),
+    menuTitle: document.getElementById("menu-title"),
+    btnDownload: document.getElementById("btn-download"),
+    btnRestore: document.getElementById("btn-restore"),
+    btnShareDay: document.getElementById("btn-share-day"),
+    btnMenuClose: document.getElementById("btn-menu-close"),
+    restoreDialog: document.getElementById("restore-dialog"),
+    restoreTitle: document.getElementById("restore-title"),
+    restoreSummary: document.getElementById("restore-summary"),
+    btnRestoreCancel: document.getElementById("btn-restore-cancel"),
+    btnRestoreMerge: document.getElementById("btn-restore-merge"),
+    btnRestoreReplace: document.getElementById("btn-restore-replace"),
+    confirmDialog: document.getElementById("confirm-dialog"),
+    confirmTitle: document.getElementById("confirm-title"),
+    confirmMessage: document.getElementById("confirm-message"),
+    btnConfirmCancel: document.getElementById("btn-confirm-cancel"),
+    btnConfirmOk: document.getElementById("btn-confirm-ok"),
+    fileInput: document.getElementById("file-input"),
+    toast: document.getElementById("toast"),
+  };
+
+  function defaultState() {
+    return {
+      version: 1,
+      entries: [],
+      settings: {
+        theme: "system",
+        lang: detectLang(),
+      },
+    };
+  }
+
+  function detectLang() {
+    const nav = (navigator.language || "en").toLowerCase();
+    return nav.startsWith("it") ? "it" : "en";
+  }
+
+  function t(key) {
+    const lang = state.settings.lang === "it" ? "it" : "en";
+    return I18N[lang][key] || I18N.en[key] || key;
+  }
+
+  function load() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const data = JSON.parse(raw);
+      if (!data || typeof data !== "object") return;
+      state = {
+        version: 1,
+        entries: Array.isArray(data.entries) ? data.entries.filter(validEntry) : [],
+        settings: {
+          theme: normalizeTheme(data.settings && data.settings.theme),
+          lang: data.settings && data.settings.lang === "it" ? "it" : (data.settings && data.settings.lang === "en" ? "en" : detectLang()),
+        },
+      };
+    } catch (_) {
+      /* keep defaults */
+    }
+  }
+
+  function validEntry(e) {
+    return e && typeof e.id === "string" && typeof e.ts === "string" && typeof e.text === "string";
+  }
+
+  function normalizeTheme(v) {
+    return v === "light" || v === "dark" || v === "system" ? v : "system";
+  }
+
+  function persist() {
+    const payload = JSON.stringify({
+      version: 1,
+      entries: state.entries,
+      settings: state.settings,
+    });
+    try {
+      localStorage.setItem(STORAGE_KEY, payload);
+    } catch (_) {
+      /* quota — still keep in-memory; soft warning covers this */
+    }
+    updateStorageWarning(payload.length);
+  }
+
+  function updateStorageWarning(bytes) {
+    const n = state.entries.length;
+    const show = bytes >= SOFT_BYTES || n >= SOFT_COUNT;
+    el.storageWarning.textContent = t("storageWarn");
+    el.storageWarning.classList.toggle("visible", show);
+  }
+
+  function applyTheme() {
+    const pref = state.settings.theme;
+    let theme = pref;
+    if (pref === "system") {
+      theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+    document.documentElement.setAttribute("data-theme", theme);
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute("content", theme === "dark" ? "#161513" : "#f4f2ee");
+  }
+
+  function applyI18n() {
+    document.documentElement.lang = state.settings.lang === "it" ? "it" : "en";
+    el.title.textContent = t("title");
+    el.subtitle.textContent = t("subtitle");
+    el.composer.placeholder = t("placeholder");
+    el.btnSave.textContent = t("save");
+    el.composerHint.textContent = t("shortcut");
+    el.menuTitle.textContent = t("menu");
+    el.btnDownload.textContent = t("download");
+    el.btnRestore.textContent = t("restore");
+    el.btnShareDay.textContent = t("shareDay");
+    el.btnMenuClose.textContent = t("close");
+    el.restoreTitle.textContent = t("restoreTitle");
+    el.btnRestoreCancel.textContent = t("cancel");
+    el.btnRestoreMerge.textContent = t("merge");
+    el.btnRestoreReplace.textContent = t("replace");
+    el.btnToday.textContent = t("today");
+    el.btnTheme.setAttribute("aria-label", t("theme"));
+    el.btnTheme.title = t("theme");
+    el.btnLang.setAttribute("aria-label", t("lang"));
+    el.btnLang.title = t("lang");
+    el.btnLang.textContent = state.settings.lang === "it" ? "IT" : "EN";
+    el.btnPrev.setAttribute("aria-label", t("prevDay"));
+    el.btnNext.setAttribute("aria-label", t("nextDay"));
+    el.btnMenu.setAttribute("aria-label", t("menu"));
+    document.title = t("title");
+  }
+
+  function localDateKey(d) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return y + "-" + m + "-" + day;
+  }
+
+  function parseLocalDay(key) {
+    const [y, m, d] = key.split("-").map(Number);
+    return new Date(y, m - 1, d, 12, 0, 0, 0);
+  }
+
+  function shiftDay(key, delta) {
+    const d = parseLocalDay(key);
+    d.setDate(d.getDate() + delta);
+    return localDateKey(d);
+  }
+
+  function entryDayKey(entry) {
+    const d = new Date(entry.ts);
+    if (Number.isNaN(d.getTime())) return "";
+    return localDateKey(d);
+  }
+
+  function formatTime(iso) {
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return "--:--";
+    return d.toLocaleTimeString(state.settings.lang === "it" ? "it-IT" : "en-GB", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+  }
+
+  function nowIso() {
+    const d = new Date();
+    const pad = (n) => String(n).padStart(2, "0");
+    const off = -d.getTimezoneOffset();
+    const sign = off >= 0 ? "+" : "-";
+    const oh = pad(Math.floor(Math.abs(off) / 60));
+    const om = pad(Math.abs(off) % 60);
+    return (
+      d.getFullYear() +
+      "-" + pad(d.getMonth() + 1) +
+      "-" + pad(d.getDate()) +
+      "T" + pad(d.getHours()) +
+      ":" + pad(d.getMinutes()) +
+      ":" + pad(d.getSeconds()) +
+      sign + oh + ":" + om
+    );
+  }
+
+  function uid() {
+    if (crypto.randomUUID) return crypto.randomUUID();
+    return "id-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 10);
+  }
+
+  function entriesForDay(dayKey) {
+    return state.entries
+      .filter((e) => entryDayKey(e) === dayKey)
+      .sort((a, b) => (a.ts < b.ts ? 1 : a.ts > b.ts ? -1 : 0));
+  }
+
+  function setSelectedDay(key) {
+    selectedDay = key;
+    el.dayPicker.value = key;
+    const today = localDateKey(new Date());
+    el.btnToday.hidden = key === today;
+    renderLog();
+  }
+
+  function renderLog() {
+    const list = entriesForDay(selectedDay);
+    el.log.innerHTML = "";
+    if (!list.length) {
+      const p = document.createElement("p");
+      p.className = "empty";
+      p.textContent = t("empty");
+      el.log.appendChild(p);
+      return;
+    }
+    for (const entry of list) {
+      el.log.appendChild(renderEntry(entry));
+    }
+  }
+
+  function renderEntry(entry) {
+    const card = document.createElement("article");
+    card.className = "entry" + (editingId === entry.id ? " editing" : "");
+    card.dataset.id = entry.id;
+
+    const head = document.createElement("div");
+    head.className = "entry-head";
+
+    const time = document.createElement("div");
+    time.className = "entry-time";
+    time.textContent = formatTime(entry.ts);
+
+    const actions = document.createElement("div");
+    actions.className = "entry-actions";
+
+    if (editingId === entry.id) {
+      const ta = document.createElement("textarea");
+      ta.value = entry.text;
+      ta.setAttribute("aria-label", t("edit"));
+
+      const editActions = document.createElement("div");
+      editActions.className = "entry-edit-actions";
+
+      const cancel = document.createElement("button");
+      cancel.type = "button";
+      cancel.className = "ghost";
+      cancel.textContent = t("cancel");
+      cancel.addEventListener("click", () => {
+        editingId = null;
+        renderLog();
+      });
+
+      const save = document.createElement("button");
+      save.type = "button";
+      save.className = "primary";
+      save.textContent = t("saveEdit");
+      save.addEventListener("click", () => {
+        const text = ta.value.replace(/\s+$/g, "");
+        if (!text.trim()) return;
+        updateEntry(entry.id, text);
+        editingId = null;
+        renderLog();
+        toast(t("saved"));
+      });
+
+      editActions.append(cancel, save);
+      head.appendChild(time);
+      card.append(head, ta, editActions);
+      queueMicrotask(() => ta.focus());
+      return card;
+    }
+
+    const btnEdit = document.createElement("button");
+    btnEdit.type = "button";
+    btnEdit.className = "ghost";
+    btnEdit.textContent = t("edit");
+    btnEdit.addEventListener("click", () => {
+      editingId = entry.id;
+      renderLog();
+    });
+
+    const btnDel = document.createElement("button");
+    btnDel.type = "button";
+    btnDel.className = "ghost danger";
+    btnDel.textContent = t("delete");
+    btnDel.addEventListener("click", async () => {
+      const ok = await askConfirm(t("deleteTitle"), t("deleteMsg"), t("delete"));
+      if (!ok) return;
+      deleteEntry(entry.id);
+      renderLog();
+    });
+
+    actions.append(btnEdit, btnDel);
+    head.append(time, actions);
+
+    const body = document.createElement("p");
+    body.className = "entry-text";
+    body.textContent = entry.text;
+
+    card.append(head, body);
+    return card;
+  }
+
+  function saveComposer() {
+    const text = el.composer.value.replace(/\s+$/g, "");
+    if (!text.trim()) return;
+
+    // If viewing another day, stamp time as noon local on that day (backfill),
+    // but if viewing today use real now.
+    const today = localDateKey(new Date());
+    let ts = nowIso();
+    if (selectedDay !== today) {
+      const d = parseLocalDay(selectedDay);
+      const now = new Date();
+      d.setHours(now.getHours(), now.getMinutes(), now.getSeconds(), now.getMilliseconds());
+      ts = isoFromDate(d);
+    }
+
+    state.entries.push({
+      id: uid(),
+      ts: ts,
+      updatedAt: null,
+      text: text,
+    });
+    persist();
+    el.composer.value = "";
+    renderLog();
+    toast(t("saved"));
+  }
+
+  function isoFromDate(d) {
+    const pad = (n) => String(n).padStart(2, "0");
+    const off = -d.getTimezoneOffset();
+    const sign = off >= 0 ? "+" : "-";
+    const oh = pad(Math.floor(Math.abs(off) / 60));
+    const om = pad(Math.abs(off) % 60);
+    return (
+      d.getFullYear() +
+      "-" + pad(d.getMonth() + 1) +
+      "-" + pad(d.getDate()) +
+      "T" + pad(d.getHours()) +
+      ":" + pad(d.getMinutes()) +
+      ":" + pad(d.getSeconds()) +
+      sign + oh + ":" + om
+    );
+  }
+
+  function updateEntry(id, text) {
+    const e = state.entries.find((x) => x.id === id);
+    if (!e) return;
+    e.text = text;
+    e.updatedAt = nowIso();
+    persist();
+  }
+
+  function deleteEntry(id) {
+    state.entries = state.entries.filter((x) => x.id !== id);
+    if (editingId === id) editingId = null;
+    persist();
+  }
+
+  function downloadBackup() {
+    const blob = new Blob(
+      [
+        JSON.stringify(
+          {
+            version: 1,
+            exportedAt: nowIso(),
+            entries: state.entries,
+            settings: state.settings,
+          },
+          null,
+          2
+        ),
+      ],
+      { type: "application/json" }
+    );
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "liminal-journal-backup-" + localDateKey(new Date()) + ".json";
+    a.click();
+    URL.revokeObjectURL(a.href);
+    toast(t("downloaded"));
+  }
+
+  function dayPlainText(dayKey) {
+    const list = entriesForDay(dayKey).slice().reverse(); // chronological for share
+    const lines = list.map((e) => formatTime(e.ts) + " — " + e.text);
+    return "Liminal Journal — " + dayKey + "\n\n" + (lines.length ? lines.join("\n\n") : "");
+  }
+
+  async function shareDay() {
+    const text = dayPlainText(selectedDay);
+    const title = "Liminal Journal — " + selectedDay;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: title, text: text });
+        toast(t("shared"));
+        return;
+      } catch (err) {
+        if (err && err.name === "AbortError") return;
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(text);
+      toast(t("copied"));
+    } catch (_) {
+      const blob = new Blob([text], { type: "text/plain" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "liminal-journal-" + selectedDay + ".txt";
+      a.click();
+      URL.revokeObjectURL(a.href);
+      toast(t("downloaded"));
+    }
+  }
+
+  function openRestorePicker() {
+    el.fileInput.value = "";
+    el.fileInput.click();
+  }
+
+  function onFileChosen(file) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const data = JSON.parse(String(reader.result || ""));
+        const entries = Array.isArray(data.entries) ? data.entries.filter(validEntry) : [];
+        if (!entries.length) {
+          toast(t("restoreEmpty"));
+          return;
+        }
+        const days = entries.map(entryDayKey).filter(Boolean).sort();
+        pendingRestore = {
+          entries: entries,
+          settings: data.settings || null,
+        };
+        el.restoreSummary.textContent = t("restoreSummary")
+          .replace("{count}", String(entries.length))
+          .replace("{from}", days[0] || "—")
+          .replace("{to}", days[days.length - 1] || "—");
+        el.restoreDialog.showModal();
+      } catch (_) {
+        toast(t("restoreBad"));
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  function mergeRestore() {
+    if (!pendingRestore) return;
+    const map = new Map(state.entries.map((e) => [e.id, e]));
+    for (const e of pendingRestore.entries) {
+      map.set(e.id, e);
+    }
+    state.entries = Array.from(map.values());
+    pendingRestore = null;
+    persist();
+    el.restoreDialog.close();
+    renderLog();
+    toast(t("restored"));
+  }
+
+  async function replaceRestore() {
+    if (!pendingRestore) return;
+    const ok = await askConfirm(t("replaceConfirmTitle"), t("replaceConfirmMsg"), t("replace"));
+    if (!ok) return;
+    state.entries = pendingRestore.entries.slice();
+    if (pendingRestore.settings) {
+      state.settings.theme = normalizeTheme(pendingRestore.settings.theme);
+      if (pendingRestore.settings.lang === "it" || pendingRestore.settings.lang === "en") {
+        state.settings.lang = pendingRestore.settings.lang;
+      }
+    }
+    pendingRestore = null;
+    persist();
+    applyTheme();
+    applyI18n();
+    el.restoreDialog.close();
+    renderLog();
+    toast(t("restored"));
+  }
+
+  function askConfirm(title, message, okLabel) {
+    el.confirmTitle.textContent = title;
+    el.confirmMessage.textContent = message;
+    el.btnConfirmCancel.textContent = t("cancel");
+    el.btnConfirmOk.textContent = okLabel || t("confirmOk");
+    el.confirmDialog.showModal();
+    return new Promise((resolve) => {
+      confirmResolver = resolve;
+    });
+  }
+
+  function toast(msg) {
+    el.toast.textContent = msg;
+    el.toast.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.toast.classList.remove("show"), 1800);
+  }
+
+  function cycleTheme() {
+    const order = ["system", "light", "dark"];
+    const i = order.indexOf(state.settings.theme);
+    state.settings.theme = order[(i + 1) % order.length];
+    persist();
+    applyTheme();
+  }
+
+  function toggleLang() {
+    state.settings.lang = state.settings.lang === "it" ? "en" : "it";
+    persist();
+    applyI18n();
+    renderLog();
+  }
+
+  function bind() {
+    el.btnSave.addEventListener("click", saveComposer);
+    el.composer.addEventListener("keydown", (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+        e.preventDefault();
+        saveComposer();
+      }
+    });
+
+    el.dayPicker.addEventListener("change", () => {
+      if (el.dayPicker.value) setSelectedDay(el.dayPicker.value);
+    });
+    el.btnPrev.addEventListener("click", () => setSelectedDay(shiftDay(selectedDay, -1)));
+    el.btnNext.addEventListener("click", () => setSelectedDay(shiftDay(selectedDay, 1)));
+    el.btnToday.addEventListener("click", () => setSelectedDay(localDateKey(new Date())));
+
+    el.btnTheme.addEventListener("click", cycleTheme);
+    el.btnLang.addEventListener("click", toggleLang);
+
+    el.btnMenu.addEventListener("click", () => el.menuDialog.showModal());
+    el.btnMenuClose.addEventListener("click", () => el.menuDialog.close());
+    el.btnDownload.addEventListener("click", () => {
+      el.menuDialog.close();
+      downloadBackup();
+    });
+    el.btnRestore.addEventListener("click", () => {
+      el.menuDialog.close();
+      openRestorePicker();
+    });
+    el.btnShareDay.addEventListener("click", () => {
+      el.menuDialog.close();
+      shareDay();
+    });
+
+    el.fileInput.addEventListener("change", () => {
+      const f = el.fileInput.files && el.fileInput.files[0];
+      onFileChosen(f);
+    });
+
+    el.btnRestoreCancel.addEventListener("click", () => {
+      pendingRestore = null;
+      el.restoreDialog.close();
+    });
+    el.btnRestoreMerge.addEventListener("click", mergeRestore);
+    el.btnRestoreReplace.addEventListener("click", replaceRestore);
+
+    el.btnConfirmCancel.addEventListener("click", () => {
+      el.confirmDialog.close();
+      if (confirmResolver) {
+        confirmResolver(false);
+        confirmResolver = null;
+      }
+    });
+    el.btnConfirmOk.addEventListener("click", () => {
+      el.confirmDialog.close();
+      if (confirmResolver) {
+        confirmResolver(true);
+        confirmResolver = null;
+      }
+    });
+
+    el.confirmDialog.addEventListener("close", () => {
+      if (confirmResolver) {
+        confirmResolver(false);
+        confirmResolver = null;
+      }
+    });
+
+    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+      if (state.settings.theme === "system") applyTheme();
+    });
+  }
+
+  function init() {
+    load();
+    bind();
+    applyTheme();
+    applyI18n();
+    setSelectedDay(localDateKey(new Date()));
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY) || "";
+      updateStorageWarning(raw.length);
+    } catch (_) {
+      updateStorageWarning(0);
+    }
+  }
+
+  init();
+})();
+  </script>
+</body>
+</html>
